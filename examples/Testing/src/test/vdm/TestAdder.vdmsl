@@ -1,0 +1,11 @@
+module TestAdder
+imports from Adder all
+definitions
+
+operations
+
+  TestAdd:() ==> nat
+  TestAdd() == Adder`add(1,1)
+  post RESULT = 2;
+
+end TestAdder

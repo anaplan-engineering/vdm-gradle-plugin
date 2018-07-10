@@ -1,0 +1,13 @@
+module TestY
+
+imports from TestX all
+
+definitions
+
+values
+
+z : nat = TestX`y
+
+end TestY
+
+

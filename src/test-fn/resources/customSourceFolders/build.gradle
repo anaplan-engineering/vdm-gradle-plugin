@@ -1,0 +1,10 @@
+plugins {
+    id("vdm")
+}
+
+apply plugin: 'vdm'
+
+vdm {
+    sourcesDir "src/main/spec"
+    testSourcesDir "src/test/spec"
+}

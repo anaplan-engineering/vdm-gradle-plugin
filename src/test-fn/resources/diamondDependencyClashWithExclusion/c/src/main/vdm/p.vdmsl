@@ -1,0 +1,11 @@
+module P
+
+imports from X all
+
+definitions
+
+values
+
+p : nat = X`x
+
+end P

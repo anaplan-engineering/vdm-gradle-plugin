@@ -1,0 +1,13 @@
+module TestX
+
+exports all
+
+definitions
+
+values
+
+y : nat = 1
+
+end TestX
+
+

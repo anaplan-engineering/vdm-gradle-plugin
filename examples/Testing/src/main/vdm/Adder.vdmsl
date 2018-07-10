@@ -1,0 +1,10 @@
+module Adder
+exports all
+definitions
+
+functions
+
+  add: nat * nat -> nat
+  add(a,b) == a + b
+
+end Adder

@@ -1,0 +1,10 @@
+module B
+
+definitions
+
+values
+
+y : nat = 1
+
+end B
+

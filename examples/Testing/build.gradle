@@ -1,0 +1,13 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+    dependencies {
+        classpath group: 'com.anaplan.engineering', name: 'vdm-gradle-plugin', version: '2.6.2'
+    }
+}
+
+version = '1.0.0'
+
+apply plugin: 'vdm'

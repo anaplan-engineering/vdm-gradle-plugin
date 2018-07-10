@@ -1,0 +1,10 @@
+module TestB
+
+definitions
+
+values
+
+y : nat = 1
+
+end TestB
+

@@ -1,0 +1,11 @@
+module X
+
+exports all
+
+definitions
+
+values
+
+x : nat = 1
+
+end X

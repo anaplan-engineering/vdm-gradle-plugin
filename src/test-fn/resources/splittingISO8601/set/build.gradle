@@ -1,0 +1,30 @@
+plugins {
+    id("vdm")
+}
+
+group = "testing"
+version = '1.0.0'
+
+apply plugin: 'maven-publish'
+
+publishing {
+    repositories {
+        maven {
+            url 'file://' + file('../.m2/repository').absolutePath
+        }
+    }
+}
+
+repositories {
+    maven {
+        url 'file://' + file('../.m2/repository').absolutePath
+    }
+}
+
+apply plugin: 'vdm'
+
+dependencies {
+  vdm group: 'testing', name: 'seq', version: '1.0.0'
+}
+
+

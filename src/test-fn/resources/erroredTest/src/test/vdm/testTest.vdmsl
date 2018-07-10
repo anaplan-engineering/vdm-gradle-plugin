@@ -1,0 +1,18 @@
+module TestTest
+
+definitions
+
+functions
+
+	Add:nat * nat -> nat
+	Add(a,b) == a + b
+	pre a < 5 and b < 5
+
+operations
+
+  TestAdd:() ==> nat
+  TestAdd() == Add(6,1)
+  post RESULT = 2;
+
+
+end TestTest

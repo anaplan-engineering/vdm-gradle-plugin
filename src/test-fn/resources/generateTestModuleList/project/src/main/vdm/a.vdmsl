@@ -1,0 +1,10 @@
+module A
+
+definitions
+
+values
+
+x : nat = 1
+
+end A
+

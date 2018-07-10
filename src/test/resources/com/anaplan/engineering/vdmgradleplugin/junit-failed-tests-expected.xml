@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="3" tests="3">
+  <testcase classname="c1" name="t1" time="0.012">
+    <failure message="m1"/>
+  </testcase>
+  <testcase classname="c2" name="t2" time="0.024">
+    <failure message="m2"/>
+  </testcase>
+  <testcase classname="c3" name="t3" time="103.435">
+    <failure message="m3"/>
+  </testcase>
+</testsuite>

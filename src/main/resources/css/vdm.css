@@ -1,0 +1,75 @@
+html {
+    font-size: 12pt;
+    line-height: 1.5;
+    min-height: 100%;
+    background: white;
+}
+
+body {
+    font-family: georgia, serif;
+    margin: 0 auto;
+    max-width: 1000px;
+    min-height: 100%;
+    padding: 2em;
+}
+
+a {
+    text-decoration: none;
+    color: mediumblue;
+    font-weight: bold;
+}
+
+a:hover,
+a:focus {
+    color: blue;
+}
+
+blockquote {
+    margin: 0.2em 0.2em 0.2em 0.2em;
+    padding: 0em 2em;
+    position: relative;
+}
+
+blockquote:before {
+    content: '';
+    display: block;
+    width: 7px;
+    height: 100%;
+    background: darkgray;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: .5;
+}
+
+blockquote p {
+    font-size: 110%;
+}
+
+.vdm-cite {
+    text-decoration: none;
+    color: black;
+    font-weight: normal;
+}
+
+li{
+    margin: 5px 0;
+}
+
+
+table, th, td {
+    border: 1px solid black;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 5px;
+}
+
+th {
+    font-weight: bold;
+    background: lightgray;
+}
