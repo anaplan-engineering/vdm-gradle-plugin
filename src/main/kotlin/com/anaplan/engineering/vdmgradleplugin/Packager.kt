@@ -32,7 +32,8 @@ const val vdmPackage = "package"
 internal fun Project.addPackageTask() {
     createVdmTask(vdmPackage, VdmPackageTask::class.java)
     afterEvaluate { project ->
-        val vdmPackageTask = project.tasks.getByName(vdmPackage) ?: throw GradleException("Cannot find VDM package task")
+        val vdmPackageTask = project.tasks.getByName(vdmPackage)
+                ?: throw GradleException("Cannot find VDM package task")
         vdmPackageTask.dependsOn(typeCheckTests)
         val assembleTask = project.tasks.getByName(LifecycleBasePlugin.ASSEMBLE_TASK_NAME)
                 ?: throw GradleException("Cannot find assemble task")
@@ -51,11 +52,11 @@ open class VdmPackageTask() : DefaultTask() {
 
     private fun createSourcePackage() {
         val sourceFiles = locateSpecifications(project.vdmSourceDir, project.vdmConfig.dialect)
-        val zipDirectory = project.vdmPackageFile.parentFile
-        if (!zipDirectory.exists()) {
-            zipDirectory.mkdirs()
-        }
-        createZip(sourceFiles, project.vdmSourceDir, project.vdmPackageFile)
+        createZip(
+                project.vdmPackageFile,
+                ZipContents(sourceFiles, baseDir = project.vdmSourceDir),
+                project.createManifestForZip("main")
+        )
     }
 
     private fun createDocSourcePackage() {
@@ -67,11 +68,12 @@ open class VdmPackageTask() : DefaultTask() {
         if (sourceFiles.isEmpty()) {
             return
         }
-        val zipDirectory = project.vdmMdPackageFile.parentFile
-        if (!zipDirectory.exists()) {
-            zipDirectory.mkdirs()
-        }
-        createZip(sourceFiles, project.vdmDocsDir, project.vdmMdPackageFile)
+        createZip(
+                project.vdmMdPackageFile,
+                ZipContents(sourceFiles, baseDir = project.vdmDocsDir),
+                project.createManifestForZip("md")
+
+        )
     }
 
     private fun createTestSourcePackage() {
@@ -82,12 +84,13 @@ open class VdmPackageTask() : DefaultTask() {
         if (sourceFiles.isEmpty()) {
             return
         }
-        val zipDirectory = project.vdmTestPackageFile.parentFile
-        if (!zipDirectory.exists()) {
-            zipDirectory.mkdirs()
-        }
-        createZip(sourceFiles, project.vdmTestSourceDir, project.vdmTestPackageFile)
+        createZip(
+                project.vdmTestPackageFile,
+                ZipContents(sourceFiles, baseDir = project.vdmTestSourceDir),
+                project.createManifestForZip("test")
+        )
     }
+
 
 }
 

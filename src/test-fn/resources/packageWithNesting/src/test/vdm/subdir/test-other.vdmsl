@@ -1,0 +1,11 @@
+module TestOther
+
+definitions
+
+values
+
+q : nat = 1
+
+end TestOther
+
+

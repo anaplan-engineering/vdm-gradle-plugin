@@ -3,3 +3,6 @@ plugins {
 }
 
 apply plugin: 'vdm'
+
+group 'testing'
+version '1.0.0'

@@ -26,15 +26,33 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
-internal fun createZip(contents : List<File>, baseDir : File, outputFile: File) {
-    ZipOutputStream(BufferedOutputStream(FileOutputStream(outputFile))).use { out ->
-        contents.forEach { file ->
-            FileInputStream(file).use { fileInputStream ->
-                BufferedInputStream(fileInputStream).use { bufferedInputStream ->
-                    val relativeFileName = baseDir.toPath().relativize(file.toPath()).toString()
-                    val entry = ZipEntry(relativeFileName)
-                    out.putNextEntry(entry)
-                    bufferedInputStream.copyTo(out, 1024)
+internal data class ZipContents(
+        val contents : List<File>,
+        val aliases : List<File>? = null,
+        val baseDir : File? = null
+)
+
+internal fun createZip(zipFile: File, vararg contents : ZipContents) {
+    val zipDirectory = zipFile.parentFile
+    if (!zipDirectory.exists()) {
+        zipDirectory.mkdirs()
+    }
+    ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { out ->
+        contents.forEach { content ->
+            content.contents.forEachIndexed { index, file ->
+                FileInputStream(file).use { fileInputStream ->
+                    BufferedInputStream(fileInputStream).use { bufferedInputStream ->
+                        val fileForZip = if (content.aliases != null) {
+                            content.aliases.get(index)
+                        } else if (content.baseDir != null) {
+                            file.relativeTo(content.baseDir)
+                        } else {
+                            file
+                        }
+                        val entry = ZipEntry(fileForZip.toString())
+                        out.putNextEntry(entry)
+                        bufferedInputStream.copyTo(out, 1024)
+                    }
                 }
             }
         }
