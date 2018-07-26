@@ -32,7 +32,7 @@ open class VdmConfigExtension @javax.inject.Inject constructor(objectFactory: Ob
     var docsDir: String = "src/main/md"
     var packaging: Packaging = objectFactory.newInstance(Packaging::class.java)
     var dependencies: Dependencies = objectFactory.newInstance(Dependencies::class.java)
-    var prettyPrinter: PrettyPrinter = objectFactory.newInstance(PrettyPrinter::class.java)
+    var prettyPrinter: PrettyPrinterConfig = objectFactory.newInstance(PrettyPrinterConfig::class.java)
     var resourceFileTypes: Array<String> = arrayOf("svg", "png", "gif")
     var autoDocGeneration: Boolean = true
 
@@ -44,7 +44,7 @@ open class VdmConfigExtension @javax.inject.Inject constructor(objectFactory: Ob
         action.execute(dependencies)
     }
 
-    fun prettyPrinter(action: Action<PrettyPrinter>) {
+    fun prettyPrinter(action: Action<PrettyPrinterConfig>) {
         action.execute(prettyPrinter)
     }
 }
@@ -59,7 +59,7 @@ open class Dependencies @javax.inject.Inject constructor(@Suppress("UNUSED_PARAM
     var autoDependTest: Boolean = true
 }
 
-open class PrettyPrinter @javax.inject.Inject constructor(@Suppress("UNUSED_PARAMETER") objectFactory: ObjectFactory) {
+open class PrettyPrinterConfig @javax.inject.Inject constructor(@Suppress("UNUSED_PARAMETER") objectFactory: ObjectFactory) {
     var logUnhandledCases: Boolean = false
     var minListLengthToUseNls: Int = 5
 

@@ -27,7 +27,7 @@ import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
 internal data class ZipContents(
-        val contents : List<File>,
+        val contents : Iterable<File>,
         val aliases : List<File>? = null,
         val baseDir : File? = null
 )

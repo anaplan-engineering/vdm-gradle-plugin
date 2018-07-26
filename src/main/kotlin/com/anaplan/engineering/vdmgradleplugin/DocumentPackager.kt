@@ -24,6 +24,10 @@ package com.anaplan.engineering.vdmgradleplugin
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.file.FileCollection
+import org.gradle.api.internal.file.collections.SimpleFileCollection
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 import java.io.File
@@ -51,15 +55,24 @@ internal val Project.docPackageFile: File
 
 
 open class DocPackageTask : DefaultTask() {
+    val docFiles : FileCollection
+        @InputFiles
+        get() {
+            val resourceTypes = project.vdmConfig.resourceFileTypes
+            return SimpleFileCollection(locateFilesWithExtension(project.vdmGenDocsDir, "html", "css", *resourceTypes))
+        }
+
+    val docPackageFile: File
+        @OutputFile
+        get() = project.docPackageFile
+
     @TaskAction
     fun packageDocs() {
         if (!project.vdmGenDocsDir.exists()) {
             return
         }
-        val resourceTypes = project.vdmConfig.resourceFileTypes
-        val docFiles = locateFilesWithExtension(project.vdmGenDocsDir, "html", "css", *resourceTypes)
         createZip(
-                project.docPackageFile,
+                docPackageFile,
                 ZipContents(docFiles, baseDir = project.vdmGenDocsDir)
         )
     }

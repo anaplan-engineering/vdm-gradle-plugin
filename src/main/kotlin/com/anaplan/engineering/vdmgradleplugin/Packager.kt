@@ -24,8 +24,14 @@ package com.anaplan.engineering.vdmgradleplugin
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.file.FileCollection
+import org.gradle.api.internal.file.collections.SimpleFileCollection
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.language.base.plugins.LifecycleBasePlugin
+import java.io.File
 
 const val vdmPackage = "package"
 
@@ -41,7 +47,43 @@ internal fun Project.addPackageTask() {
     }
 }
 
+// TODO -- separate tasks to minimize repackaging
 open class VdmPackageTask() : DefaultTask() {
+
+    val sourceFiles: FileCollection
+        @InputFiles
+        get() = SimpleFileCollection(locateSpecifications(project.vdmSourceDir, project.vdmConfig.dialect))
+
+    val vdmPackageFile: File
+        @OutputFile
+        get() = project.vdmPackageFile
+
+    val testSourceFiles: FileCollection
+        @InputFiles
+        get() = SimpleFileCollection(locateSpecifications(project.vdmTestSourceDir, project.vdmConfig.dialect))
+
+    val vdmTestPackageFile: File
+        @OutputFile
+        get() = project.vdmTestPackageFile
+
+    val mdSourceFiles: FileCollection
+        @InputFiles
+        get() {
+            val resourceTypes = project.vdmConfig.resourceFileTypes
+            return SimpleFileCollection(locateFilesWithExtension(project.vdmMdDir, "md", *resourceTypes))
+        }
+
+    val vdmMdPackageFile: File
+        @OutputFile
+        get() = project.vdmMdPackageFile
+
+    val packageMdSource: Boolean
+        @Input
+        get() = project.vdmConfig.packaging.mdSource
+
+    val packageTestSource: Boolean
+        @Input
+        get() = project.vdmConfig.packaging.testSource
 
     @TaskAction
     fun createPackages() {
@@ -51,46 +93,41 @@ open class VdmPackageTask() : DefaultTask() {
     }
 
     private fun createSourcePackage() {
-        val sourceFiles = locateSpecifications(project.vdmSourceDir, project.vdmConfig.dialect)
         createZip(
-                project.vdmPackageFile,
+                vdmPackageFile,
                 ZipContents(sourceFiles, baseDir = project.vdmSourceDir),
                 project.createManifestForZip("main")
         )
     }
 
     private fun createDocSourcePackage() {
-        if (!project.vdmConfig.packaging.mdSource) {
+        if (!packageMdSource) {
             return
         }
-        val resourceTypes = project.vdmConfig.resourceFileTypes
-        val sourceFiles = locateFilesWithExtension(project.vdmDocsDir, "md", *resourceTypes)
-        if (sourceFiles.isEmpty()) {
+        if (mdSourceFiles.isEmpty) {
             return
         }
         createZip(
-                project.vdmMdPackageFile,
-                ZipContents(sourceFiles, baseDir = project.vdmDocsDir),
+                vdmMdPackageFile,
+                ZipContents(mdSourceFiles, baseDir = project.vdmMdDir),
                 project.createManifestForZip("md")
 
         )
     }
 
     private fun createTestSourcePackage() {
-        if (!project.vdmConfig.packaging.testSource) {
+        if (!packageTestSource) {
             return
         }
-        val sourceFiles = locateSpecifications(project.vdmTestSourceDir, project.vdmConfig.dialect)
-        if (sourceFiles.isEmpty()) {
+        if (testSourceFiles.isEmpty) {
             return
         }
         createZip(
-                project.vdmTestPackageFile,
-                ZipContents(sourceFiles, baseDir = project.vdmTestSourceDir),
+                vdmTestPackageFile,
+                ZipContents(testSourceFiles, baseDir = project.vdmTestSourceDir),
                 project.createManifestForZip("test")
         )
     }
-
-
 }
+
 

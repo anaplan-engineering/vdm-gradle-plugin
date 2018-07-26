@@ -26,8 +26,11 @@ import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import java.time.LocalDateTime
 
 const val dependencyUnpack = "dependencyUnpack"
 
@@ -35,9 +38,39 @@ internal fun Project.addDependencyUnpackTask() = createVdmTask(dependencyUnpack,
 
 open class DependencyUnpackTask : DefaultTask() {
 
+    private val vdmConfiguration = project.configurations.getByName(vdmConfigurationName)
+
+    // There is nothing serializable that we can depend on out-of-the-box. Create a string that we can use for comparison.
+    val dependencies: String
+        @Input
+        get() = vdmConfiguration.dependencies.map { d ->
+            // No way that we can determine whether snapshots are uptodate without resolution -- so take pessimistic view
+            "${d.group}:${d.name}:${if (d.version?.endsWith("-SNAPSHOT") == true) LocalDateTime.now().toString() else d.version}"
+        }.joinToString(";")
+
+    val vdmMdDependencyDir: File
+        @OutputDirectory
+        get() = project.vdmMdDependencyDir
+
+    val vdmTestDependencyDir: File
+        @OutputDirectory
+        get() = project.vdmTestDependencyDir
+
+    val vdmDependencyDir: File
+        @OutputDirectory
+        get() = project.vdmDependencyDir
+
+    val autoDependMd: Boolean
+        @Input
+        get() = project.vdmConfig.dependencies.autoDependMd
+
+    val autoDependTest: Boolean
+        @Input
+        get() = project.vdmConfig.dependencies.autoDependTest
+
     @TaskAction
     fun unpack() {
-        project.configurations.getByName(vdmConfiguration).resolutionStrategy.failOnVersionConflict()
+        vdmConfiguration.resolutionStrategy.failOnVersionConflict()
         unpackSpecifications()
         unpackTests()
         unpackDocumentation()
@@ -45,15 +78,15 @@ open class DependencyUnpackTask : DefaultTask() {
 
     // TODO - finer grained control
     private fun unpackDocumentation() {
-        if (project.vdmConfig.dependencies.autoDependMd) {
-            autoUnpackAttachedArtifacts(vdmMarkdownConfiguration, "md", project.vdmMdDependencyDir)
+        if (autoDependMd) {
+            autoUnpackAttachedArtifacts(vdmMarkdownConfiguration, "md", vdmMdDependencyDir)
         }
     }
 
     // TODO - finer grained control
     private fun unpackTests() {
-        if (project.vdmConfig.dependencies.autoDependTest) {
-            autoUnpackAttachedArtifacts(vdmTestConfiguration, "test", project.vdmTestDependencyDir)
+        if (autoDependTest) {
+            autoUnpackAttachedArtifacts(vdmTestConfiguration, "test", vdmTestDependencyDir)
         }
     }
 
@@ -61,7 +94,7 @@ open class DependencyUnpackTask : DefaultTask() {
         if (project.configurations.findByName(attachedConfiguration) == null) {
             project.configurations.create(attachedConfiguration)
         }
-        project.configurations.getByName(vdmConfiguration).incoming.artifacts.map { it.id.componentIdentifier }.forEach { id ->
+        vdmConfiguration.incoming.artifacts.map { it.id.componentIdentifier }.forEach { id ->
             project.dependencies.add(attachedConfiguration, "$id:$classifier@zip")
         }
         project.configurations.getByName(attachedConfiguration).resolvedConfiguration.lenientConfiguration.artifacts.forEach { artifact ->
@@ -71,8 +104,8 @@ open class DependencyUnpackTask : DefaultTask() {
     }
 
     private fun unpackSpecifications() {
-        project.configurations.getByName(vdmConfiguration).incoming.artifacts.forEach { artifact ->
-            unpackArtifact(artifact.id, artifact.file, project.vdmDependencyDir)
+        vdmConfiguration.incoming.artifacts.forEach { artifact ->
+            unpackArtifact(artifact.id, artifact.file, vdmDependencyDir)
         }
     }
 
@@ -91,5 +124,4 @@ open class DependencyUnpackTask : DefaultTask() {
         }
         extractZip(file, dependencyUnpackDir)
     }
-
 }

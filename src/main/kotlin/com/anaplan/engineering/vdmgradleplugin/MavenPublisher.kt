@@ -108,7 +108,7 @@ open class AddVdmDependenciesToPomTask() : DefaultTask() {
     @TaskAction
     fun appendDependencies() {
         val pomRewriter = PomRewriter(File(project.buildDir, "publications/${publicationName}/pom-default.xml"))
-        val vdmConfiguration = project.configurations.getByName(vdmConfiguration)
+        val vdmConfiguration = project.configurations.getByName(vdmConfigurationName)
         val dependencies = vdmConfiguration.dependencies.map { d ->
             val dependency = Dependency()
             dependency.groupId = d.group

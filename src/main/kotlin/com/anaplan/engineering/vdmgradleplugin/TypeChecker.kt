@@ -24,8 +24,14 @@ package com.anaplan.engineering.vdmgradleplugin
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.file.FileCollection
+import org.gradle.api.internal.file.collections.SimpleFileCollection
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.overture.interpreter.util.ExitStatus
+import java.io.File
 
 const val typeCheck = "typeCheck"
 const val typeCheckTests = "typeCheckTests"
@@ -42,8 +48,27 @@ open class VdmTypeCheckMainTask() : VdmTypeCheckTask(false)
 
 open class VdmTypeCheckTestTask() : VdmTypeCheckTask(true)
 
-// TODO -- don't evaluate if unchanged --- https://docs.gradle.org/current/userguide/more_about_tasks.html#sec:up_to_date_checks
 open class VdmTypeCheckTask(private val includeTests: Boolean) : DefaultTask() {
+
+    val dialect: Dialect
+        @Input
+        get() = project.vdmConfig.dialect
+
+    val specificationFiles: FileCollection
+        @InputFiles
+        get() = SimpleFileCollection(
+                locateSpecifications(project.vdmDependencyDir, dialect) +
+                        locateSpecifications(project.vdmSourceDir, dialect) +
+                        if (includeTests) {
+                            locateSpecifications(project.vdmTestDependencyDir, dialect) +
+                                    locateSpecifications(project.vdmTestSourceDir, dialect)
+                        } else {
+                            listOf()
+                        })
+
+    val generatedLibFile: File
+        @OutputFile
+        get() = project.generatedLibFile
 
     /*
     Various strategies have been attempted here to make use of binaries and to split out the parse phase from the type
@@ -60,29 +85,19 @@ open class VdmTypeCheckTask(private val includeTests: Boolean) : DefaultTask() {
      */
     @TaskAction
     fun typeCheck() {
-        val dialect = project.vdmConfig.dialect
         logger.info("VDM dialect: $dialect")
 
         val controller = dialect.createController()
 
-        val files = locateSpecifications(project.vdmDependencyDir, dialect) +
-                locateSpecifications(project.vdmSourceDir, dialect) +
-                if (includeTests) {
-                    locateSpecifications(project.vdmTestDependencyDir, dialect) +
-                            locateSpecifications(project.vdmTestSourceDir, dialect)
-                } else {
-                    listOf()
-                }
-
         logger.debug("Specification files found: ")
-        files.forEach { logger.debug(" * $it") }
+        specificationFiles.forEach { logger.debug(" * $it") }
 
-        if (!project.generatedLibFile.parentFile.exists()) {
-            project.generatedLibFile.parentFile.mkdirs()
+        if (!generatedLibFile.parentFile.exists()) {
+            generatedLibFile.parentFile.mkdirs()
         }
-        controller.setOutfile(project.generatedLibFile.absolutePath)
+        controller.setOutfile(generatedLibFile.absolutePath)
 
-        val parseStatus = controller.parse(files)
+        val parseStatus = controller.parse(specificationFiles.toList())
         if (parseStatus != ExitStatus.EXIT_OK) {
             throw GradleException("VDM parse failed")
         }
