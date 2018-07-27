@@ -22,6 +22,7 @@ ext {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -75,4 +76,5 @@ gradlePlugin {
         }
     }
 }
+
 

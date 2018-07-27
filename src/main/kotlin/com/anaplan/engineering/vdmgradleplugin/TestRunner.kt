@@ -25,6 +25,9 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.logging.Logger
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 import org.overture.ast.definitions.SOperationDefinition
@@ -54,13 +57,24 @@ internal val timestampFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern
 
 open class VdmTestRunTask() : DefaultTask() {
 
+    val dialect: Dialect
+        @Input
+        get() = project.vdmConfig.dialect
+
+    val generatedLibFile: File
+        @InputFile
+        get() = project.generatedLibFile
+
+    val reportDir: File
+        @OutputDirectory
+        get() = File(project.vdmBuildDir, "junitreports")
+
     @TaskAction
     fun runTests() {
-        val dialect = project.vdmConfig.dialect
         if (dialect != Dialect.vdmsl) {
             throw GradleException("Test running only defined for VDM-SL currently")
         }
-        val interpreter = project.loadBinarySpecification()
+        val interpreter = project.loadBinarySpecification(generatedLibFile)
         val testSuites = collectTests(interpreter)
         val testRunner = TestRunner(interpreter, logger)
         val testResults = testRunner.run(testSuites)
@@ -85,7 +99,7 @@ open class VdmTestRunTask() : DefaultTask() {
         val testModules = interpreter.modules.filter { module ->
             module.files.all { it.startsWith(project.vdmTestSourceDir) } &&
                     module.name.name.startsWith("Test")
-            }
+        }
         return testModules.map { module ->
             val operationDefs = module.defs.filter { it is SOperationDefinition }.map { it as SOperationDefinition }
             // TODO - should check that operation has zero params
@@ -95,7 +109,6 @@ open class VdmTestRunTask() : DefaultTask() {
     }
 
     private fun saveFormattedResults(testSuiteResults: List<TestSuiteResult>) {
-        val reportDir = File(project.vdmBuildDir, "junitreports")
         if (reportDir.exists()) {
             deleteDirectory(reportDir)
         }

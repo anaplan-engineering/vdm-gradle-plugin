@@ -39,7 +39,7 @@ class VdmGradlePlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         project.extensions.create("vdm", VdmConfigExtension::class.java, project.objects)
-        project.configurations.create(vdmConfiguration)
+        project.configurations.create(vdmConfigurationName)
         project.addBase()
         project.addDependencyUnpackTask()
         project.addTypeCheckTasks()
@@ -57,7 +57,7 @@ internal fun Project.addBase() {
 }
 
 internal const val vdmTaskGroup = "vdm"
-internal const val vdmConfiguration = "vdm"
+internal const val vdmConfigurationName = "vdm"
 internal const val vdmMarkdownConfiguration = "vdm-md"
 internal const val vdmTestConfiguration = "vdm-test"
 
@@ -70,7 +70,7 @@ internal val Project.vdmSourceDir
 internal val Project.vdmTestSourceDir
     get() = File(projectDir, vdmConfig.testSourcesDir)
 
-internal val Project.vdmDocsDir
+internal val Project.vdmMdDir
     get() = File(projectDir, vdmConfig.docsDir)
 
 internal val Project.vdmGenDocsDir
@@ -155,10 +155,10 @@ internal fun deleteDirectory(directory: File) {
     Files.walkFileTree(directory.toPath(), fileVisitor)
 }
 
-internal fun Project.loadBinarySpecification(vararg otherFiles: File): Interpreter {
+internal fun Project.loadBinarySpecification(binary: File, vararg otherFiles: File): Interpreter {
     val dialect = project.vdmConfig.dialect
     val controller = dialect.createController()
-    val parseStatus = controller.parse(listOf(project.generatedLibFile) + otherFiles)
+    val parseStatus = controller.parse(listOf(binary) + otherFiles)
     if (parseStatus != ExitStatus.EXIT_OK) {
         throw GradleException("VDM parse of generated lib failed")
     }
