@@ -144,8 +144,8 @@ open class DocGenTask : DefaultTask() {
                 copyAdditionalResources(resourceFiles, dependencyDir, targetDir)
             }
         }
-        generateModuleAppendix(interpreter.modules.filter(isMainModule), sharedFiles.modulesDirectory, sharedFiles.cssFile)
-        generateModuleAppendix(interpreter.modules.filter(isTestModule), sharedFiles.testModulesDirectory, sharedFiles.cssFile)
+        generateModuleAppendix("Modules", interpreter.modules.filter(isMainModule), sharedFiles.modulesDirectory, sharedFiles.cssFile)
+        generateModuleAppendix("Test modules", interpreter.modules.filter(isTestModule), sharedFiles.testModulesDirectory, sharedFiles.cssFile)
 
         copyAdditionalResources(resourceFiles, project.vdmMdDir, vdmGenDocsDir)
     }
@@ -225,18 +225,22 @@ open class DocGenTask : DefaultTask() {
             |</html>
             |""".trimMargin()
 
-    private fun generateModuleAppendix(modules: List<AModuleModules>, moduleDirectory: File, cssFile: File) =
-    // TODO - create an index page of modules
-            modules.forEach { module ->
-                val name = module.name.name
-                val genDocFile = File(moduleDirectory, "$name.html")
-                if (!genDocFile.parentFile.exists()) {
-                    genDocFile.parentFile.mkdirs()
-                }
-                val config = project.vdmConfig.prettyPrinter.toConfig()
-                val prettyPrintedModule = prettyPrinter.prettyPrint(module, config)
-                genDocFile.writeText(addMetadata(name, prettyPrintedModule, cssFile.relativeTo(genDocFile.parentFile)))
+    private fun generateModuleAppendix(pageTitle : String, modules: List<AModuleModules>, moduleDirectory: File, cssFile: File) {
+        if (!moduleDirectory.exists()) {
+            moduleDirectory.mkdirs()
+        }
+        File(moduleDirectory, "index.html").writeText(ModuleAppendixSummaryRenderer().render(pageTitle, modules))
+        modules.forEach { module ->
+            val name = module.name.name
+            val genDocFile = File(moduleDirectory, "$name.html")
+            if (!genDocFile.parentFile.exists()) {
+                genDocFile.parentFile.mkdirs()
             }
+            val config = project.vdmConfig.prettyPrinter.toConfig()
+            val prettyPrintedModule = prettyPrinter.prettyPrint(module, config)
+            genDocFile.writeText(addMetadata(name, prettyPrintedModule, cssFile.relativeTo(genDocFile.parentFile)))
+        }
+    }
 }
 
 private data class SharedFiles(
