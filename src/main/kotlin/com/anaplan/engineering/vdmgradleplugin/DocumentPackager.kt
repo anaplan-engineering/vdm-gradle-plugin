@@ -58,10 +58,9 @@ open class DocPackageTask : DefaultTask() {
         }
         val resourceTypes = project.vdmConfig.resourceFileTypes
         val docFiles = locateFilesWithExtension(project.vdmGenDocsDir, "html", "css", *resourceTypes)
-        val zipDirectory = project.vdmPackageFile.parentFile
-        if (!zipDirectory.exists()) {
-            zipDirectory.mkdirs()
-        }
-        createZip(docFiles, project.vdmGenDocsDir, project.docPackageFile)
+        createZip(
+                project.docPackageFile,
+                ZipContents(docFiles, baseDir = project.vdmGenDocsDir)
+        )
     }
 }

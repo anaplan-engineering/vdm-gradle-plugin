@@ -1,0 +1,9 @@
+module Other
+
+definitions
+
+values
+
+p : nat = 1
+
+end Other

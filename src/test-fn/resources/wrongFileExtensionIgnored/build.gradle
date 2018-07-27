@@ -3,3 +3,5 @@ plugins {
 }
 
 apply plugin: 'vdm'
+
+version '1.0.0'
