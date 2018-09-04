@@ -216,7 +216,7 @@ operations
  
   TestAdd:() ==> real
   TestAdd() == Arithmetic`Add(3, 4)
-  post RESULT = 3;
+  post RESULT = 7;
  
   TestMultiply:() ==> real
   TestMultiply() == Arithmetic`Multiply(3, 4)
@@ -227,7 +227,7 @@ operations
   post RESULT = 0;
  
   CheckSubtract:() ==> real
-  CheckSubtract() == Arithmetic`Add(6, 4)
+  CheckSubtract() == Arithmetic`Subtract(6, 4)
   post RESULT = 2;
  
 end TestArithmetic
