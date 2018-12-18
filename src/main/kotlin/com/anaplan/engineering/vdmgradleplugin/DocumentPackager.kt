@@ -25,7 +25,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
-import org.gradle.api.internal.file.collections.SimpleFileCollection
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
@@ -59,7 +58,7 @@ open class DocPackageTask : DefaultTask() {
         @InputFiles
         get() {
             val resourceTypes = project.vdmConfig.resourceFileTypes
-            return SimpleFileCollection(locateFilesWithExtension(project.vdmGenDocsDir, "html", "css", *resourceTypes))
+            return project.files(locateFilesWithExtension(project.vdmGenDocsDir, "html", "css", *resourceTypes))
         }
 
     val docPackageFile: File

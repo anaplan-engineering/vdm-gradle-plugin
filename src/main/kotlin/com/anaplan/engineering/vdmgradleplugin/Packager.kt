@@ -25,7 +25,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
-import org.gradle.api.internal.file.collections.SimpleFileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
@@ -52,7 +51,7 @@ open class VdmPackageTask() : DefaultTask() {
 
     val sourceFiles: FileCollection
         @InputFiles
-        get() = SimpleFileCollection(locateSpecifications(project.vdmSourceDir, project.vdmConfig.dialect))
+        get() = project.files(locateSpecifications(project.vdmSourceDir, project.vdmConfig.dialect))
 
     val vdmPackageFile: File
         @OutputFile
@@ -60,7 +59,7 @@ open class VdmPackageTask() : DefaultTask() {
 
     val testSourceFiles: FileCollection
         @InputFiles
-        get() = SimpleFileCollection(locateSpecifications(project.vdmTestSourceDir, project.vdmConfig.dialect))
+        get() = project.files(locateSpecifications(project.vdmTestSourceDir, project.vdmConfig.dialect))
 
     val vdmTestPackageFile: File
         @OutputFile
@@ -70,7 +69,7 @@ open class VdmPackageTask() : DefaultTask() {
         @InputFiles
         get() {
             val resourceTypes = project.vdmConfig.resourceFileTypes
-            return SimpleFileCollection(locateFilesWithExtension(project.vdmMdDir, "md", *resourceTypes))
+            return project.files(locateFilesWithExtension(project.vdmMdDir, "md", *resourceTypes))
         }
 
     val vdmMdPackageFile: File

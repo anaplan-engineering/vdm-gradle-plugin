@@ -94,8 +94,10 @@ open class DependencyUnpackTask : DefaultTask() {
         if (project.configurations.findByName(attachedConfiguration) == null) {
             project.configurations.create(attachedConfiguration)
         }
-        vdmConfiguration.incoming.artifacts.map { it.id.componentIdentifier }.forEach { id ->
-            project.dependencies.add(attachedConfiguration, "$id:$classifier@zip")
+        vdmConfiguration.incoming.artifacts.map {
+            it.id.componentIdentifier as ModuleComponentIdentifier
+        }.forEach { id ->
+            project.dependencies.add(attachedConfiguration, "${id.group}:${id.module}:${id.version}:$classifier@zip")
         }
         project.configurations.getByName(attachedConfiguration).resolvedConfiguration.lenientConfiguration.artifacts.forEach { artifact ->
             artifact.id.componentIdentifier as ModuleComponentIdentifier

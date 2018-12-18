@@ -31,33 +31,15 @@ class PomRewriterTest {
     @Test
     fun addDependencies_noExistingDependencies() = check("pom-no-dependencies") { pomRewriter ->
         pomRewriter.addDependencies(listOf(
-                dependency("group", "artifact", "1.0.0", null, "zip", "compile")
+                PomRewriter.Dependency("group", "artifact", "1.0.0", null, "zip", "compile")
         ))
     }
 
     @Test
     fun addDependencies_withExistingDependencies() = check("pom-with-dependencies") { pomRewriter ->
         pomRewriter.addDependencies(listOf(
-                dependency("group2", "artifact2", "2.0.0", null, "zip", "compile")
+                PomRewriter.Dependency("group2", "artifact2", "2.0.0", null, "zip", "compile")
         ))
-    }
-
-    private fun dependency(
-            groupId: String? = null,
-            artifactId: String? = null,
-            version: String? = null,
-            classifier: String? = null,
-            type: String? = null,
-            scope: String? = null
-    ): Dependency {
-        val dependency = Dependency()
-        dependency.groupId = groupId
-        dependency.artifactId = artifactId
-        dependency.version = version
-        dependency.classifier = classifier
-        dependency.type = type
-        dependency.scope = scope
-        return dependency
     }
 
     private fun check(resourceSuffix: String, makeChanges: (PomRewriter) -> Unit) {

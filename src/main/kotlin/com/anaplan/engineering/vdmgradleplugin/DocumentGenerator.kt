@@ -24,6 +24,9 @@ package com.anaplan.engineering.vdmgradleplugin
 import com.anaplan.engineering.vdmprettyprinter.MathematicalUnicodeHtmlRenderStrategy
 import com.anaplan.engineering.vdmprettyprinter.PrettyPrintConfig
 import com.anaplan.engineering.vdmprettyprinter.VdmPrettyPrinter
+import kotlinx.html.*
+import kotlinx.html.stream.appendHTML
+import kotlinx.html.stream.createHTML
 import org.commonmark.ext.gfm.tables.TablesExtension
 import org.commonmark.node.*
 import org.commonmark.parser.Parser
@@ -37,7 +40,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
-import org.gradle.api.internal.file.collections.SimpleFileCollection
 import org.gradle.api.tasks.*
 import org.overture.ast.definitions.AValueDefinition
 import org.overture.ast.definitions.PDefinition
@@ -62,7 +64,7 @@ internal fun Project.addDocGenTask() {
     }
 }
 
-private val prettyPrinter = VdmPrettyPrinter(MathematicalUnicodeHtmlRenderStrategy())
+private val prettyPrinter = VdmPrettyPrinter(MathematicalUnicodeHtmlRenderStrategy(header = "", footer = ""))
 
 open class DocGenTask : DefaultTask() {
 
@@ -82,15 +84,15 @@ open class DocGenTask : DefaultTask() {
 
     val resourceFiles: FileCollection
         @InputFiles
-        get() = SimpleFileCollection(locateFilesWithExtension(project.vdmMdDir, *resourceTypes))
+        get() = project.files(locateFilesWithExtension(project.vdmMdDir, *resourceTypes))
 
     val mdSourceFiles: FileCollection
         @InputFiles
-        get() = SimpleFileCollection(locateFilesWithExtension(project.vdmMdDir, "md"))
+        get() = project.files(locateFilesWithExtension(project.vdmMdDir, "md"))
 
     val mdDependencies: FileCollection
         @InputFiles
-        get() = SimpleFileCollection(locateFilesWithExtension(project.vdmMdDependencyDir, "md", *resourceTypes))
+        get() = project.files(locateFilesWithExtension(project.vdmMdDependencyDir, "md", *resourceTypes))
 
     val logUnhandledCases: Boolean
         @Input
@@ -140,7 +142,7 @@ open class DocGenTask : DefaultTask() {
             locateImmediateSubDirectories(project.vdmMdDependencyDir).forEach { dependencyDir ->
                 val targetDir = File(vdmGenDocsDir, dependencyDir.name)
                 processMarkdownFiles(interpreter, sharedFiles, dependencyDir, targetDir)
-                val resourceFiles = SimpleFileCollection(locateFilesWithExtension(dependencyDir, *resourceTypes))
+                val resourceFiles = project.files(locateFilesWithExtension(dependencyDir, *resourceTypes))
                 copyAdditionalResources(resourceFiles, dependencyDir, targetDir)
             }
         }
@@ -187,6 +189,7 @@ open class DocGenTask : DefaultTask() {
                 AutoIdHeadingAttributeProvider()
             }).build()
             val mdDoc = mdParser.parse(mdSourceFile.readText())
+            // TODO - pretty print the body/final text (ideally using kotlinx.html, but can't see how to do this easily)
             val htmlDoc = addMetadata(mdSourceFile.nameWithoutExtension, htmlRenderer.render(mdDoc), sharedFiles.cssFile.relativeTo(genDocFile.parentFile))
             if (!genDocFile.parentFile.exists()) {
                 genDocFile.parentFile.mkdirs()
@@ -208,28 +211,25 @@ open class DocGenTask : DefaultTask() {
         return cssFile
     }
 
-    // TODO - use dsl
     private fun addMetadata(title: String, bodyText: String, relativeCssFile: File) =
-            """
-            |<!DOCTYPE html>
-            |<html data-theme=vdm>
-            |<head>
-            |<meta charset="UTF-8">
-            |<link rel="stylesheet" type="text/css" href="${relativeCssFile.path}">
-            |<title>$title</title>
-            |</head>
-            |
-            |<body>
-            |$bodyText
-            |</body>
-            |</html>
-            |""".trimMargin()
+            buildString {
+                appendln("<!DOCTYPE html>")
+                appendHTML(xhtmlCompatible = true).html {
+                    attributes["data-theme"] = "vdm"
+                    head {
+                        meta(charset = "UTF-8")
+                        link(rel = "stylesheet", type = "text/css", href = relativeCssFile.path)
+                        title(content = title)
+                    }
+                    body { unsafe { +bodyText } }
+                }
+            }
 
-    private fun generateModuleAppendix(pageTitle : String, modules: List<AModuleModules>, moduleDirectory: File, cssFile: File) {
+    private fun generateModuleAppendix(pageTitle: String, modules: List<AModuleModules>, moduleDirectory: File, cssFile: File) {
         if (!moduleDirectory.exists()) {
             moduleDirectory.mkdirs()
         }
-        File(moduleDirectory, "index.html").writeText(ModuleAppendixSummaryRenderer().render(pageTitle, modules))
+        File(moduleDirectory, "index.html").writeText(renderModuleAppendixSummary(pageTitle, modules))
         modules.forEach { module ->
             val name = module.name.name
             val genDocFile = File(moduleDirectory, "$name.html")
@@ -369,20 +369,21 @@ private class VdmHtmlNodeRenderer(
             throw IllegalArgumentException("Incorrectly formatted page directive:\nShould be {@page:fileName:displayText}' for local links or {@page:groupId:artifactId:fileName:displayText} for cross component links.")
         }
         // TODO - check file exists?
-        cxt.writer.raw("<a href='$pathToFile'>$displayText</a>")
+        cxt.writer.raw(htmlSnippet().a(href = pathToFile) { +displayText })
     }
 
     private fun renderAnchor(names: List<String>) =
             names.forEach { name ->
-                cxt.writer.raw("<div id=$name />")
+                cxt.writer.raw(htmlSnippet().div { id = name })
             }
 
     private fun renderModuleList(modules: List<AModuleModules>, directory: String) {
-        val listItems = modules.sortedBy { it.name.name }.map { module ->
-            val name = module.name.name
-            "<li><a href='$directory/$name.html'>$name</a></li>"
-        }.joinToString("")
-        cxt.writer.raw("<ul>$listItems</ul>")
+        cxt.writer.raw(htmlSnippet().ul {
+            modules.sortedBy { it.name.name }.map { module ->
+                val name = module.name.name
+                li { a(href = "$directory/$name.html") { +name } }
+            }
+        })
     }
 
     private fun determineMinListLengthToUseNls(params: List<String>) =
@@ -396,7 +397,10 @@ private class VdmHtmlNodeRenderer(
         val definitionText = prettyPrinter.prettyPrint(definition,
                 PrettyPrintConfig(includeHeaderFooter = false, minListLengthToUseNls = determineMinListLengthToUseNls(params),
                         logUnhandledCases = config.logUnhandledCases))
-        cxt.writer.raw("<a class=\"vdm-cite\" href='${getModuleDirectory(module)}/$moduleName.html#$definitionName'><blockquote><p>$definitionText</p></blockquote></a>")
+        cxt.writer.raw(htmlSnippet().a(href = "${getModuleDirectory(module)}/$moduleName.html#$definitionName") {
+            attributes["class"] = "vdm-cite"
+            blockQuote { p { unsafe { +definitionText } } }
+        })
     }
 
     private fun findDefinitionOrDie(module: AModuleModules, definitionName: String): PDefinition {
@@ -415,14 +419,16 @@ private class VdmHtmlNodeRenderer(
 
     private fun renderModuleLink(moduleName: String) {
         val module = findModuleOrDie(moduleName)
-        cxt.writer.raw("<a href='${getModuleDirectory(module)}/$moduleName.html'>$moduleName</a>")
+        cxt.writer.raw(htmlSnippet().a(href = "${getModuleDirectory(module)}/$moduleName.html") { +moduleName })
     }
 
     private fun renderDefinitionLink(moduleName: String, definitionName: String) {
         val module = findModuleOrDie(moduleName)
         findDefinitionOrDie(module, definitionName)
-        cxt.writer.raw("<a href='${getModuleDirectory(module)}/$moduleName.html#$definitionName'>$moduleName`$definitionName</a>")
+        cxt.writer.raw(htmlSnippet().a(href = "${getModuleDirectory(module)}/$moduleName.html#$definitionName") { +"$moduleName`$definitionName" })
     }
+
+    private fun htmlSnippet() = createHTML(xhtmlCompatible = true)
 
     private fun getModuleDirectory(module: AModuleModules) =
             if (vdmContext.isMainModule(module)) vdmContext.pathToModules else vdmContext.pathToTestModules
@@ -482,3 +488,25 @@ fun locateImmediateSubDirectories(directory: File): List<File> {
     Files.walkFileTree(directory.toPath(), fileVisitor)
     return dirs.map { it.toFile() }
 }
+
+fun renderModuleAppendixSummary(pageTitle: String, modules: List<AModuleModules>) =
+        buildString {
+            appendHTML(xhtmlCompatible = true).html {
+                attributes["data-theme"] = "vdm"
+                head {
+                    meta(charset = "UTF-8")
+                    link(rel = "stylesheet", type = "text/css", href = "../vdm.css")
+                    title(content = pageTitle)
+                }
+                body {
+                    h1 { +pageTitle }
+                    ul {
+                        modules.map { it.name.name }.sorted().forEach { name ->
+                            li {
+                                a(href = "$name.html") { +name }
+                            }
+                        }
+                    }
+                }
+            }
+        }

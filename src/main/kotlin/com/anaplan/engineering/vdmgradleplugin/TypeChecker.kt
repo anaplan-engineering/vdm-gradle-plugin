@@ -25,7 +25,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
-import org.gradle.api.internal.file.collections.SimpleFileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
@@ -56,7 +55,7 @@ open class VdmTypeCheckTask(private val includeTests: Boolean) : DefaultTask() {
 
     val specificationFiles: FileCollection
         @InputFiles
-        get() = SimpleFileCollection(
+        get() = project.files(
                 locateSpecifications(project.vdmDependencyDir, dialect) +
                         locateSpecifications(project.vdmSourceDir, dialect) +
                         if (includeTests) {
