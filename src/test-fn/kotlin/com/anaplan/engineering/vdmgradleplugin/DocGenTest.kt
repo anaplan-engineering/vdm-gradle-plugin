@@ -51,6 +51,8 @@ class DocGenTest(
                 test(testName = "generateTestModuleList", modules = listOf("A", "B"), testModules = listOf("TestA", "TestB"), pages = listOf("A")),
                 test(testName = "generateModuleLink", modules = listOf("A", "B"), pages = listOf("A")),
                 test(testName = "generateModuleRef", modules = listOf("A", "B"), pages = listOf("A")),
+                // test(testName = "generateMultipleModuleRef", modules = listOf("A", "B"), pages = listOf("A")),
+                test(testName = "generateMultipleModuleRefEscaped", modules = listOf("A", "B"), pages = listOf("A")),
                 test(testName = "generateAnchor", modules = listOf("A", "B"), pages = listOf("A")),
                 // TODO - test for links to dependencies
                 test(testName = "generateLocalPageLink", modules = listOf("A", "B"), pages = listOf("A", "B"))
