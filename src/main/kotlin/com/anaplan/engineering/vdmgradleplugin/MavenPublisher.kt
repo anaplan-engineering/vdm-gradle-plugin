@@ -25,8 +25,8 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.MavenArtifact
 import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.api.publish.maven.internal.artifact.DefaultMavenArtifact
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.tasks.TaskAction
 import org.gradle.language.base.plugins.LifecycleBasePlugin
@@ -82,6 +82,20 @@ private fun Project.addVdmMavenPublish() {
     project.tasks.whenTaskAdded(addTaskDependencies)
 }
 
+private class MavenArtifactAdapter(
+        val f: File,
+        val e: String,
+        val c: String
+) : MavenArtifact {
+    override fun getExtension() = e
+    override fun getFile() = f
+    override fun setExtension(p0: String?) {}
+    override fun setClassifier(p0: String?) {}
+    override fun getBuildDependencies() = null
+    override fun getClassifier() = c
+    override fun builtBy(vararg p0: Any?) {}
+}
+
 open class AddVdmAttachedArtifactsTask : DefaultTask() {
     @TaskAction
     fun addAttachedArtifacts() {
@@ -89,15 +103,15 @@ open class AddVdmAttachedArtifactsTask : DefaultTask() {
         val mavenPublication = publishingExtension.publications.getByName(publicationName) as MavenPublication
         if (project.vdmTestPackageFile.exists() && mavenPublication.artifacts.none { it.file == project.vdmTestPackageFile }) {
             logger.info("Marking test artifact for publication")
-            mavenPublication.artifact(DefaultMavenArtifact(project.vdmTestPackageFile, "zip", "test"))
+            mavenPublication.artifact(MavenArtifactAdapter(project.vdmTestPackageFile, "zip", "test"))
         }
         if (project.vdmMdPackageFile.exists() && mavenPublication.artifacts.none { it.file == project.vdmMdPackageFile }) {
             logger.info("Marking md artifact for publication")
-            mavenPublication.artifact(DefaultMavenArtifact(project.vdmMdPackageFile, "zip", "md"))
+            mavenPublication.artifact(MavenArtifactAdapter(project.vdmMdPackageFile, "zip", "md"))
         }
         if (project.docPackageFile.exists() && mavenPublication.artifacts.none { it.file == project.docPackageFile }) {
             logger.info("Marking doc artifact for publication")
-            mavenPublication.artifact(DefaultMavenArtifact(project.docPackageFile, "zip", "doc"))
+            mavenPublication.artifact(MavenArtifactAdapter(project.docPackageFile, "zip", "doc"))
         }
     }
 }
@@ -110,14 +124,14 @@ open class AddVdmDependenciesToPomTask() : DefaultTask() {
         val pomRewriter = PomRewriter(File(project.buildDir, "publications/${publicationName}/pom-default.xml"))
         val vdmConfiguration = project.configurations.getByName(vdmConfigurationName)
         val dependencies = vdmConfiguration.dependencies.map { d ->
-            val dependency = Dependency()
-            dependency.groupId = d.group
-            dependency.artifactId = d.name
-            dependency.version = d.version
-            dependency.classifier = null
-            dependency.type = "zip"
-            dependency.scope = "compile"
-            dependency
+            PomRewriter.Dependency(
+                    d.group ?: throw IllegalStateException("Dependency has null group id"),
+                    d.name,
+                    d.version ?: throw IllegalStateException("Dependency has null version"),
+                    null,
+                    "zip",
+                    "compile"
+            )
         }
         pomRewriter.addDependencies(dependencies)
     }
