@@ -33,9 +33,25 @@ Additionally, the plugin provides the capability to combine specifications with 
 More details regarding the motivations for the plugin are provided in [this paper](doc/fraser-integratedVdmSlIntoCdPipelines-final.pdf).
 
 ## Version
-This page was last updated, to correctly describe the use and behaviour of version **2.6.2** of the plug-in.
+This page was last updated, to correctly describe the use and behaviour of version **2.6.4** of the plug-in.
 
-Version numbers are currently tied to the version of Overture that is used by the plugin. 
+Version numbers are currently tied to the version of Overture that is used by the plugin. However, it is possible for a consumer to choose to use a different version of Overture. This is done, by exlucing the version of Overture included by the plugin and then adding an explicit dependency on the required version. For example, to use 2.6.2 of Overture with version 2.6.4 of the plugin, you would include the plugin as follows:
+
+```groovy
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath (group: 'com.anaplan.engineering', name: 'vdm-gradle-plugin', version: '2.6.4') {
+      exclude group: 'org.overturetool.core'
+    }
+    classpath group: 'org.overturetool.core', name: 'interpreter', version: '2.6.2'
+  }
+}
+```
+
+Note that, this method will only work where there are no changes to the signatures of the VDMJ interface used by the plugin between Overture versions.
 
 ## Using the plugin
 In order to use the plugin, the following must be added to a `build.gradle` file in the root of the specification project:
@@ -46,7 +62,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath group: 'com.anaplan.engineering', name: 'vdm-gradle-plugin', version: '2.6.2'
+    classpath group: 'com.anaplan.engineering', name: 'vdm-gradle-plugin', version: '2.6.4'
   }
 }
  
@@ -74,7 +90,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath group: 'com.anaplan.engineering', name: 'vdm-gradle-plugin', version: '2.6.2'
+    classpath group: 'com.anaplan.engineering', name: 'vdm-gradle-plugin', version: '2.6.4'
   }
 }
 
