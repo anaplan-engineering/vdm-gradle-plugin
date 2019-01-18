@@ -80,7 +80,8 @@ open class DocGenTask : DefaultTask() {
         @OutputDirectory
         get() = project.vdmGenDocsDir
 
-    private val resourceTypes = project.vdmConfig.resourceFileTypes
+    private val resourceTypes
+            get() = project.vdmConfig.resourceFileTypes
 
     val resourceFiles: FileCollection
         @InputFiles
