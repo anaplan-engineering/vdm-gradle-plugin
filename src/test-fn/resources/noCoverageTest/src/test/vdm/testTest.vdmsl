@@ -1,0 +1,14 @@
+module TestTest
+imports from Main functions Add
+
+definitions
+
+operations
+
+  TestAdd:() ==> nat
+  TestAdd() == Main`Add(1,1)
+  post RESULT = 2;
+
+end TestTest
+
+

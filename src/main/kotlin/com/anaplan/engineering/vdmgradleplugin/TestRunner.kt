@@ -61,6 +61,10 @@ open class VdmTestRunTask() : DefaultTask() {
         @Input
         get() = project.vdmConfig.dialect
 
+    val recordCoverage: Boolean
+        @Input
+        get() = project.vdmConfig.recordCoverage
+
     val generatedLibFile: File
         @InputFile
         get() = project.generatedLibFile
@@ -69,16 +73,30 @@ open class VdmTestRunTask() : DefaultTask() {
         @OutputDirectory
         get() = File(project.vdmBuildDir, "junitreports")
 
+    val coverageDir: File
+        @OutputDirectory
+        get() = File(project.vdmBuildDir, "coverage")
+
     @TaskAction
     fun runTests() {
         if (dialect != Dialect.vdmsl) {
             throw GradleException("Test running only defined for VDM-SL currently")
         }
-        val interpreter = project.loadBinarySpecification(generatedLibFile)
+        val interpreter = loadSpecification()
         val testSuites = collectTests(interpreter)
         val testRunner = TestRunner(interpreter, logger)
         val testResults = testRunner.run(testSuites)
         saveFormattedResults(testResults)
+        logTestResults(testResults)
+        if (recordCoverage) {
+            CoverageRecorder(project.vdmSourceDir, coverageDir, logger).recordCoverage(interpreter)
+        }
+        if (!testResults.all { it.succeeded }) {
+            throw GradleException("There were test failures")
+        }
+    }
+
+    private fun logTestResults(testResults: List<TestSuiteResult>) {
         if (logger.isInfoEnabled) {
             if (testResults.all { it.succeeded }) {
                 logger.info("SUCCESS -- ${testResults.sumBy { it.testCount }} tests passed")
@@ -86,16 +104,23 @@ open class VdmTestRunTask() : DefaultTask() {
                 logger.info("FAILURE -- ${testResults.sumBy { it.failCount }} tests failed, ${testResults.sumBy { it.errorCount }} tests had errors [${testResults.sumBy { it.testCount }} tests were run]")
             }
         }
-        if (!testResults.all { it.succeeded }) {
-            throw GradleException("There were test failures")
-        }
     }
 
-    private fun collectTests(interpreter: Interpreter): List<TestSuite> {
-        if (!(interpreter is ModuleInterpreter)) {
-            // this should never happen as we have limited dialect to VDM-SL
-            throw GradleException("Interpreter is not a container interpreter!")
-        }
+    private fun loadSpecification() =
+            if (recordCoverage) {
+                // For coverage we need to reparse to correctly identify lex locations in files
+                val controller = dialect.createController()
+                controller.parse(project.locateAllSpecifications(   dialect, true).toList())
+                controller.typeCheck()
+                controller.getInterpreter()
+            } else {
+                project.loadBinarySpecification(generatedLibFile)
+            } as? ModuleInterpreter
+                    ?: // this should never happen as we have limited dialect to VDM-SL
+                    throw GradleException("Interpreter is not a container interpreter!")
+
+
+    private fun collectTests(interpreter: ModuleInterpreter): List<TestSuite> {
         val testModules = interpreter.modules.filter { module ->
             module.files.all { it.startsWith(project.vdmTestSourceDir) } &&
                     module.name.name.startsWith("Test")
@@ -146,6 +171,8 @@ open class VdmTestRunTask() : DefaultTask() {
         }
         Files.write(reportFile.toPath(), xml.toByteArray())
     }
+
+
 }
 
 private data class TestSuite(
