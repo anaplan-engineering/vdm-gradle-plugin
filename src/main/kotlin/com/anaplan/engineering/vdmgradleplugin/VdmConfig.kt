@@ -35,6 +35,7 @@ open class VdmConfigExtension @javax.inject.Inject constructor(objectFactory: Ob
     var prettyPrinter: PrettyPrinterConfig = objectFactory.newInstance(PrettyPrinterConfig::class.java)
     var resourceFileTypes: Array<String> = arrayOf("svg", "png", "gif")
     var autoDocGeneration: Boolean = true
+    var recordCoverage: Boolean = false
 
     fun packaging(action: Action<Packaging>) {
         action.execute(packaging)

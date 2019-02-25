@@ -1,0 +1,9 @@
+plugins {
+    id("vdm")
+}
+
+vdm {
+    recordCoverage = true
+}
+
+apply plugin: 'vdm'

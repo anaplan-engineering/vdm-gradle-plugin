@@ -107,6 +107,17 @@ internal fun Project.createVdmTask(name: String, type: Class<out Task>) =
                 "group" to vdmTaskGroup
         ))
 
+internal fun Project.locateAllSpecifications(dialect: Dialect, includeTests: Boolean) =
+        project.files(
+                locateSpecifications(project.vdmDependencyDir, dialect) +
+                        locateSpecifications(project.vdmSourceDir, dialect) +
+                        if (includeTests) {
+                            locateSpecifications(project.vdmTestDependencyDir, dialect) +
+                                    locateSpecifications(project.vdmTestSourceDir, dialect)
+                        } else {
+                            listOf()
+                        })
+
 internal fun locateSpecifications(directory: File, dialect: Dialect): List<File> {
     return locateFilesWithExtension(directory, dialect.fileExtension)
 }

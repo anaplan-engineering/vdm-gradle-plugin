@@ -55,15 +55,7 @@ open class VdmTypeCheckTask(private val includeTests: Boolean) : DefaultTask() {
 
     val specificationFiles: FileCollection
         @InputFiles
-        get() = project.files(
-                locateSpecifications(project.vdmDependencyDir, dialect) +
-                        locateSpecifications(project.vdmSourceDir, dialect) +
-                        if (includeTests) {
-                            locateSpecifications(project.vdmTestDependencyDir, dialect) +
-                                    locateSpecifications(project.vdmTestSourceDir, dialect)
-                        } else {
-                            listOf()
-                        })
+        get() = project.locateAllSpecifications(dialect, includeTests)
 
     val generatedLibFile: File
         @OutputFile

@@ -251,6 +251,8 @@ end TestArithmetic
 
 In order that test results can be displayed in the UIs of common CI tools, the task records the result in JUnit format (the most common test result, interchange format), producing one file per test suite in `${project.buildDir}/vdm/junitreports`. As well as a simple result, any failure messages are retained and the evaluation duration recorded.
 
+Test coverage can also be enabled (see [Configuration](#configuration)). When enabled HTML files are created in `${project.buildDir}/vdm/coverage`. There is one HTML file generated for each source file. Each file contains the text of the module with green and red highlighting indicating the locations that were hit or missed by the tests respectively. Tooltips indicate the number of times a specific location was hit. A rudimentary summary of statistics is also generated in `${project.buildDir}/vdm/coverage/report.html`.
+
 ### check
 This task has no actions of its own, but ensures that all verification tasks have been executed.
 
@@ -285,6 +287,7 @@ The following attributes can be configured:
 |prettyPrinter.minListLengthToUseNls|5|The min list length at which to print list items on new lines when pretty printing|
 |resourceFileTypes|["svg", "png", "gif"]|The resource file types to include in generated documentation and associated packages|
 |autoDocGeneration|true|If true, automatically generates documentation before packaging|
+|recordCoverage|false|If true, generates HTML files illustrating test coverage of the specification|  
 
 ## Examples
 Example projects and appropriate documentation can be found [here](examples).

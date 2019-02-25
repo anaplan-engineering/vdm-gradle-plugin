@@ -1,0 +1,15 @@
+module Main
+exports all
+
+definitions
+
+functions
+
+  Add:nat * nat -> nat
+  Add(a,b) == a + b;
+
+  Subtract:nat * nat -> nat
+  Subtract(a,b) == a - b
+  pre a - b >= 0;
+
+end Main
