@@ -274,7 +274,7 @@ private class TestRunner(private val interpreter: Interpreter, private val logge
                 TestResult(testName, duration, TestResultState.PASS)
             } else {
                 val msg = "test passed, but expected ${expectedResult.description}"
-                logger.debug("FAIL .. $moduleName`$testName -- $msg")
+                logger.info("FAIL .. $moduleName`$testName -- $msg")
                 TestResult(testName, duration, TestResultState.FAIL, msg)
             }
         } catch (e: ContextException) {
@@ -282,17 +282,17 @@ private class TestRunner(private val interpreter: Interpreter, private val logge
             // Post condition failure is considered a test failure, any other unexpected exception (pre/inv) is an error
             if (postconditionFailureCodes.contains(e.number)) {
                 if (expectedResult == ExpectedTestResult.failedPostcondition) {
-                    logger.info("PASS .. $moduleName`$testName")
+                    logger.debug("PASS .. $moduleName`$testName")
                     TestResult(testName, duration, TestResultState.PASS)
                 } else {
                     logger.info("FAIL .. $moduleName`$testName")
                     TestResult(testName, duration, TestResultState.FAIL, e.message)
                 }
             } else if (preconditionFailureCodes.contains(e.number) && expectedResult == ExpectedTestResult.failedPrecondition) {
-                logger.info("PASS .. $moduleName`$testName")
+                logger.debug("PASS .. $moduleName`$testName")
                 TestResult(testName, duration, TestResultState.PASS)
             } else if (invariantFailureCodes.contains(e.number) && expectedResult == ExpectedTestResult.failedInvariant) {
-                logger.info("PASS .. $moduleName`$testName")
+                logger.debug("PASS .. $moduleName`$testName")
                 TestResult(testName, duration, TestResultState.PASS)
             } else {
                 logger.info("ERRR .. $moduleName`$testName")
