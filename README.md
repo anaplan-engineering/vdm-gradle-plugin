@@ -251,6 +251,35 @@ end TestArithmetic
 
 In order that test results can be displayed in the UIs of common CI tools, the task records the result in JUnit format (the most common test result, interchange format), producing one file per test suite in `${project.buildDir}/vdm/junitreports`. As well as a simple result, any failure messages are retained and the evaluation duration recorded.
 
+In some circumstances, it can be useful to write a test where a precondition, postcondition or invariant check is expected to fail. Without annotations in VDM there is no particularly clean way to indicate this. Such expected failures can be signalled to the test runner, by including one of the following strings in the name of the test:
+- ExpectPreconditionFailure  
+- ExpectPostconditionFailure  
+- ExpectInvariantFailure
+
+For example, in following module, the first test will pass as a precondition will fail, but the second will fail as a precondition failure is expected, but will not occur.
+
+```
+module TestExpectedFailures
+
+definitions
+
+functions
+
+  AddSmallNumbers: nat * nat -> nat
+  AddSmallNumbers(x, y) == x + y
+  pre x < 10 and y < 10
+    
+operations
+ 
+  TestAddSmallNumbers_Large_ExpectPreconditionFailure:() ==> nat
+  TestAddSmallNumbers_Large_ExpectPreconditionFailure() == AddSmallNumbers(13, 4);
+  
+  TestAddSmallNumbers_Small_ExpectPreconditionFailure:() ==> nat
+  TestAddSmallNumbers_Small_ExpectPreconditionFailure() == AddSmallNumbers(3, 4);
+
+end TestExpectedFailures
+```   
+
 Test coverage can also be enabled (see [Configuration](#configuration)). When enabled HTML files are created in `${project.buildDir}/vdm/coverage`. There is one HTML file generated for each source file. Each file contains the text of the module with green and red highlighting indicating the locations that were hit or missed by the tests respectively. Tooltips indicate the number of times a specific location was hit. A rudimentary summary of statistics is also generated in `${project.buildDir}/vdm/coverage/report.html`.
 
 ### check
