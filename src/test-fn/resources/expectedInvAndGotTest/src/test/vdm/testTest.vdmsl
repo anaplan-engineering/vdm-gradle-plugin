@@ -1,0 +1,23 @@
+module TestTest
+
+definitions
+
+types
+
+  OverFive = nat
+  inv overFive == overFive > 5
+
+functions
+
+  Add:nat * nat -> OverFive
+  Add(a,b) == a + b
+
+operations
+
+  TestAdd_ExpectInvariantFailure:() ==> nat
+  TestAdd_ExpectInvariantFailure() == Add(1,1)
+  post RESULT = 2;
+
+end TestTest
+
+

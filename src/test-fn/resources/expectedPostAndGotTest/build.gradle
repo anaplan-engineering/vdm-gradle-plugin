@@ -1,0 +1,5 @@
+plugins {
+    id("vdm")
+}
+
+apply plugin: 'vdm'

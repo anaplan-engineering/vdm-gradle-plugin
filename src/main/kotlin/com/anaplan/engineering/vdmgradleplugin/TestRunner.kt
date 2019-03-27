@@ -110,7 +110,7 @@ open class VdmTestRunTask() : DefaultTask() {
             if (recordCoverage) {
                 // For coverage we need to reparse to correctly identify lex locations in files
                 val controller = dialect.createController()
-                controller.parse(project.locateAllSpecifications(   dialect, true).toList())
+                controller.parse(project.locateAllSpecifications(dialect, true).toList())
                 controller.typeCheck()
                 controller.getInterpreter()
             } else {
@@ -224,6 +224,31 @@ private inline fun <T> Iterable<T>.sumByLong(selector: (T) -> Long): Long {
     return sum
 }
 
+private enum class ExpectedTestResult(val description: String) {
+    success("success"),
+    failedPrecondition("precondition failure"),
+    failedPostcondition("postcondition failure"),
+    failedInvariant("invariant failure")
+}
+
+// ideally this would be done through an annotation, but this is not feasible currently
+private fun getExpectedResult(testName: String) : ExpectedTestResult {
+    val testNameLower = testName.toLowerCase()
+    return if (testNameLower.toLowerCase().contains("expectpreconditionfailure")) {
+        ExpectedTestResult.failedPrecondition
+    } else if (testNameLower.contains("expectpostconditionfailure")) {
+        ExpectedTestResult.failedPostcondition
+    } else if (testNameLower.contains("expectinvariantfailure")) {
+        ExpectedTestResult.failedInvariant
+    } else {
+        ExpectedTestResult.success
+    }
+}
+
+private val preconditionFailureCodes = setOf(4055, 4071)
+private val postconditionFailureCodes = setOf(4056, 4072)
+private val invariantFailureCodes = setOf(4060, 4079, 4082)
+
 private class TestRunner(private val interpreter: Interpreter, private val logger: Logger) {
 
     internal fun run(testSuites: List<TestSuite>): List<TestSuiteResult> {
@@ -239,17 +264,36 @@ private class TestRunner(private val interpreter: Interpreter, private val logge
     }
 
     private fun run(moduleName: String, testName: String): TestResult {
+        val expectedResult = getExpectedResult(testName)
         val start = System.currentTimeMillis()
         return try {
             interpreter.execute("$testName()", null)
-            logger.debug("PASS .. $moduleName`$testName")
-            TestResult(testName, System.currentTimeMillis() - start, TestResultState.PASS)
+            val duration = System.currentTimeMillis() - start
+            if (expectedResult == ExpectedTestResult.success) {
+                logger.debug("PASS .. $moduleName`$testName")
+                TestResult(testName, duration, TestResultState.PASS)
+            } else {
+                val msg = "test passed, but expected ${expectedResult.description}"
+                logger.info("FAIL .. $moduleName`$testName -- $msg")
+                TestResult(testName, duration, TestResultState.FAIL, msg)
+            }
         } catch (e: ContextException) {
             val duration = System.currentTimeMillis() - start
-            // Error #4072 is invalid post-condition -- this is considered a test failure, any other exception (pre/inv) is an error
-            if (e.number == 4072) {
-                logger.info("FAIL .. $moduleName`$testName")
-                TestResult(testName, duration, TestResultState.FAIL, e.message)
+            // Post condition failure is considered a test failure, any other unexpected exception (pre/inv) is an error
+            if (postconditionFailureCodes.contains(e.number)) {
+                if (expectedResult == ExpectedTestResult.failedPostcondition) {
+                    logger.debug("PASS .. $moduleName`$testName")
+                    TestResult(testName, duration, TestResultState.PASS)
+                } else {
+                    logger.info("FAIL .. $moduleName`$testName")
+                    TestResult(testName, duration, TestResultState.FAIL, e.message)
+                }
+            } else if (preconditionFailureCodes.contains(e.number) && expectedResult == ExpectedTestResult.failedPrecondition) {
+                logger.debug("PASS .. $moduleName`$testName")
+                TestResult(testName, duration, TestResultState.PASS)
+            } else if (invariantFailureCodes.contains(e.number) && expectedResult == ExpectedTestResult.failedInvariant) {
+                logger.debug("PASS .. $moduleName`$testName")
+                TestResult(testName, duration, TestResultState.PASS)
             } else {
                 logger.info("ERRR .. $moduleName`$testName")
                 TestResult(testName, duration, TestResultState.ERROR, e.message)

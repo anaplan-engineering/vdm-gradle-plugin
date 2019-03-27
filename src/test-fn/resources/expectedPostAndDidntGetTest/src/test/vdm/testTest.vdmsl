@@ -1,0 +1,18 @@
+module TestTest
+
+definitions
+
+functions
+
+  Add:nat * nat -> nat
+  Add(a,b) == a + b
+
+operations
+
+  TestAdd_ExpectPostconditionFailure:() ==> nat
+  TestAdd_ExpectPostconditionFailure() == Add(1,1)
+  post RESULT = 2;
+
+end TestTest
+
+

@@ -39,7 +39,13 @@ class TestTest(
         fun example() = arrayOf(
                 test(testName = "passingTest"),
                 test(testName = "failingTest", expectSuccess = false),
-                test(testName = "erroredTest", expectSuccess = false)
+                test(testName = "erroredTest", expectSuccess = false),
+                test(testName = "expectedPreAndGotTest"),
+                test(testName = "expectedPreAndDidntGetTest", expectSuccess = false),
+                test(testName = "expectedPostAndGotTest"),
+                test(testName = "expectedPostAndDidntGetTest", expectSuccess = false),
+                test(testName = "expectedInvAndGotTest"),
+                test(testName = "expectedInvAndDidntGetTest", expectSuccess = false)
         )
 
         private fun test(
