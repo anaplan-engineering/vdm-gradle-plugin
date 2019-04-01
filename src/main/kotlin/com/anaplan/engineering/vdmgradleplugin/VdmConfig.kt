@@ -36,6 +36,7 @@ open class VdmConfigExtension @javax.inject.Inject constructor(objectFactory: Ob
     var resourceFileTypes: Array<String> = arrayOf("svg", "png", "gif")
     var autoDocGeneration: Boolean = true
     var recordCoverage: Boolean = false
+    var testLaunchGeneration: TestLaunchGeneration = TestLaunchGeneration.FAILING
 
     fun packaging(action: Action<Packaging>) {
         action.execute(packaging)
@@ -48,6 +49,12 @@ open class VdmConfigExtension @javax.inject.Inject constructor(objectFactory: Ob
     fun prettyPrinter(action: Action<PrettyPrinterConfig>) {
         action.execute(prettyPrinter)
     }
+}
+
+enum class TestLaunchGeneration {
+    ALL,
+    NONE,
+    FAILING
 }
 
 open class Packaging @javax.inject.Inject constructor(@Suppress("UNUSED_PARAMETER") objectFactory: ObjectFactory) {

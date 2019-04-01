@@ -65,6 +65,10 @@ open class VdmTestRunTask() : DefaultTask() {
         @Input
         get() = project.vdmConfig.recordCoverage
 
+    val testLaunchGeneration: TestLaunchGeneration
+        @Input
+        get() = project.vdmConfig.testLaunchGeneration
+
     val generatedLibFile: File
         @InputFile
         get() = project.generatedLibFile
@@ -76,6 +80,10 @@ open class VdmTestRunTask() : DefaultTask() {
     val coverageDir: File
         @OutputDirectory
         get() = File(project.vdmBuildDir, "coverage")
+
+    val launchDir: File
+        @OutputDirectory
+        get() = File(project.vdmBuildDir, "testLaunch")
 
     @TaskAction
     fun runTests() {
@@ -91,8 +99,68 @@ open class VdmTestRunTask() : DefaultTask() {
         if (recordCoverage) {
             CoverageRecorder(project.vdmSourceDir, coverageDir, logger).recordCoverage(interpreter)
         }
+        generateLaunchFiles(testResults)
         if (!testResults.all { it.succeeded }) {
             throw GradleException("There were test failures")
+        }
+    }
+
+    private fun generateLaunchFiles(testResults: List<TestSuiteResult>) {
+        if (launchDir.exists()) {
+            deleteDirectory(launchDir)
+        }
+        launchDir.mkdirs()
+        if (testLaunchGeneration == TestLaunchGeneration.NONE) {
+            return
+        }
+        testResults.forEach { suite ->
+            suite.testResults.filter { test ->
+                testLaunchGeneration == TestLaunchGeneration.ALL || test.state != TestResultState.PASS
+            }.forEach { test ->
+                val xml = testLaunch {
+                    stringAttribute {
+                        key = "vdm_launch_config_default"
+                        value = suite.moduleName
+                    }
+                    booleanAttribute {
+                        key = "vdm_launch_config_dtc_checks"
+                        value = true
+                    }
+                    stringAttribute {
+                        key = "vdm_launch_config_expression"
+                        value = "${suite.moduleName}`${test.testName}()"
+                    }
+                    stringAttribute {
+                        key = "vdm_launch_config_project"
+                        value = project.name
+                    }
+                    stringAttribute {
+                        key = "vdm_launch_config_method"
+                        value = "${test.testName}()"
+                    }
+                    stringAttribute {
+                        key = "vdm_launch_config_module"
+                        value = suite.moduleName
+                    }
+                    booleanAttribute {
+                        key = "vdm_launch_config_inv_checks"
+                        value = true
+                    }
+                    booleanAttribute {
+                        key = "vdm_launch_config_pre_checks"
+                        value = true
+                    }
+                    booleanAttribute {
+                        key = "vdm_launch_config_post_checks"
+                        value = true
+                    }
+                    booleanAttribute {
+                        key = "vdm_launch_config_measure_checks"
+                        value = true
+                    }
+                }
+                File(launchDir, "${suite.moduleName}`${test.testName}.launch").writeText(xml)
+            }
         }
     }
 
@@ -232,7 +300,7 @@ private enum class ExpectedTestResult(val description: String) {
 }
 
 // ideally this would be done through an annotation, but this is not feasible currently
-private fun getExpectedResult(testName: String) : ExpectedTestResult {
+private fun getExpectedResult(testName: String): ExpectedTestResult {
     val testNameLower = testName.toLowerCase()
     return if (testNameLower.toLowerCase().contains("expectpreconditionfailure")) {
         ExpectedTestResult.failedPrecondition

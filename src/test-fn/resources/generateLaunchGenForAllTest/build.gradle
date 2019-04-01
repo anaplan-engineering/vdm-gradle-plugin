@@ -1,0 +1,9 @@
+plugins {
+    id("vdm")
+}
+
+apply plugin: 'vdm'
+
+vdm {
+    testLaunchGeneration = 'ALL'
+}

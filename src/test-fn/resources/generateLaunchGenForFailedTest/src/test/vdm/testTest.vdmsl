@@ -1,0 +1,22 @@
+module TestTest
+
+definitions
+
+functions
+
+  Add:nat * nat -> nat
+  Add(a,b) == a + b
+
+operations
+
+  TestAdd1:() ==> nat
+  TestAdd1() == Add(1,1)
+  post RESULT = 3;
+
+  TestAdd2:() ==> nat
+  TestAdd2() == Add(1,1)
+  post RESULT = 2;
+
+end TestTest
+
+

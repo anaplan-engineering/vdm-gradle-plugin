@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launchConfiguration type="org.overture.ide.vdmsl.debug.launchConfigurationType">
+  <stringAttribute value="MyModule" key="vdm_launch_config_default"/>
+  <booleanAttribute value="true" key="vdm_launch_config_dtc_checks"/>
+  <stringAttribute value="MyModule`MyTest()" key="vdm_launch_config_expression"/>
+  <stringAttribute value="my-project" key="vdm_launch_config_project"/>
+  <stringAttribute value="MyTest()" key="vdm_launch_config_method"/>
+  <stringAttribute value="MyModule" key="vdm_launch_config_module"/>
+  <booleanAttribute value="true" key="vdm_launch_config_inv_checks"/>
+  <booleanAttribute value="true" key="vdm_launch_config_pre_checks"/>
+  <booleanAttribute value="true" key="vdm_launch_config_post_checks"/>
+  <booleanAttribute value="true" key="vdm_launch_config_measure_checks"/>
+</launchConfiguration>
