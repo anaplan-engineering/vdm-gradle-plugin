@@ -21,89 +21,23 @@
  */
 package com.anaplan.engineering.vdmgradleplugin
 
-import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.memberProperties
-
-interface ElementTag {
-    fun render(builder: StringBuilder, indent: String)
-}
-
 @DslMarker
 annotation class JUnitResultMarker
 
-@Target(AnnotationTarget.PROPERTY)
-annotation class Attribute(
-        val name: String = ""
-)
-
-@Target(AnnotationTarget.PROPERTY)
-annotation class Element
-
-@Target(AnnotationTarget.PROPERTY)
-annotation class ElementList
-
 @JUnitResultMarker
-abstract class XmlTag(val tagName: String) : ElementTag {
+abstract class JUnitXmlTag(tagName: String) : XmlTag(tagName)
 
-    override fun render(builder: StringBuilder, indent: String) {
-        val elements = javaClass.kotlin.memberProperties.filter { property ->
-            property.findAnnotation<Element>() != null
-        }
-        val elementLists = javaClass.kotlin.memberProperties.filter { property ->
-            property.findAnnotation<ElementList>() != null
-        }
-        @Suppress("UNCHECKED_CAST") val childTags = elementLists.map { property -> property.get(this) as List<ElementTag> }.flatten() +
-                elements.map { property -> property.get(this) }.filterNotNull().map { it as ElementTag }
-        if (childTags.isEmpty()) {
-            builder.append("$indent<$tagName${renderAttributes()}/>\n")
-        } else {
-            builder.append("$indent<$tagName${renderAttributes()}>\n")
-            childTags.forEach { child ->
-                child.render(builder, "$indent  ")
-            }
-            builder.append("$indent</$tagName>\n")
-        }
-    }
-
-    private fun renderAttributes(): String {
-        val attributeProperties = javaClass.kotlin.memberProperties.filter { property ->
-            property.findAnnotation<Attribute>() != null
-        }
-        val builder = StringBuilder()
-        attributeProperties.forEach { property ->
-            val annotation = property.findAnnotation<Attribute>() as Attribute
-            val attributeName = if (annotation.name.isEmpty()) {
-                property.name
-            } else {
-                annotation.name
-            }
-            val value = property.get(this)
-            // ignore null attributes
-            if (value != null) {
-                builder.append(" $attributeName=\"$value\"")
-            }
-        }
-        return builder.toString()
-    }
-
-    override fun toString(): String {
-        val builder = StringBuilder()
-        render(builder, "")
-        return builder.toString()
-    }
-}
-
-class FailureTag : XmlTag("failure") {
+class FailureTag : JUnitXmlTag("failure") {
     @Attribute
     var message: String? = null
 }
 
-class ErrorTag : XmlTag("error") {
+class ErrorTag : JUnitXmlTag("error") {
     @Attribute
     var message: String? = null
 }
 
-class TestCaseTag : XmlTag("testcase") {
+class TestCaseTag : JUnitXmlTag("testcase") {
     @Attribute
     var name: String? = null
     @Attribute
@@ -132,7 +66,7 @@ class TestCaseTag : XmlTag("testcase") {
     }
 }
 
-class TestSuiteTag : XmlTag("testsuite") {
+class TestSuiteTag : JUnitXmlTag("testsuite") {
     @Attribute
     var name: String? = null
     @Attribute
@@ -168,6 +102,6 @@ private fun formatTime(time: Long) = "${time / 1000}.${String.format("%03d", tim
 fun testSuite(init: TestSuiteTag.() -> Unit): String {
     val testSuiteTag = TestSuiteTag()
     testSuiteTag.init()
-    return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + testSuiteTag.toString()
+    return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n$testSuiteTag"
 }
 
