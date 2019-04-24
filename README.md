@@ -282,7 +282,7 @@ end TestExpectedFailures
 
 Test coverage can also be enabled (see [Configuration](#configuration)). When enabled HTML files are created in `${project.buildDir}/vdm/coverage`. There is one HTML file generated for each source file. Each file contains the text of the module with green and red highlighting indicating the locations that were hit or missed by the tests respectively. Tooltips indicate the number of times a specific location was hit. A rudimentary summary of statistics is also generated in `${project.buildDir}/vdm/coverage/report.html`.
 
-If tests fail, then launch files are generated that enable the test to be easily run from within Overtuere. These launch files can be found in `${project.buildDir}/vdm/testLaunch`. It is possible to configure this generation to produce launches for all tests or none at all. 
+If tests fail, then launch files are generated that enable the test to be easily run from within Overture. These launch files can be found in `${project.buildDir}/vdm/testLaunch`. It is possible to configure this generation to produce launches for all tests or none at all. 
 
 ### check
 This task has no actions of its own, but ensures that all verification tasks have been executed.
