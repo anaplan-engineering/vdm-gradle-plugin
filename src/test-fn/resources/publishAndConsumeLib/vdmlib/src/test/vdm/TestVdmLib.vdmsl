@@ -1,0 +1,18 @@
+module TestVdmLib
+
+imports
+  from VdmLib
+    functions
+      addOne renamed addOne
+
+exports all
+
+definitions
+
+operations
+
+  TestAddOne: () ==> nat
+  TestAddOne() == addOne(3)
+  post RESULT = 4;
+
+end TestVdmLib

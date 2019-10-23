@@ -2,7 +2,7 @@
  * #%~
  * VDM Gradle Plugin
  * %%
- * Copyright (C) 2018 Anaplan Inc
+ * Copyright (C) 2018-9 Anaplan Inc
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -125,12 +125,10 @@ open class AddVdmDependenciesToPomTask() : DefaultTask() {
         val vdmConfiguration = project.configurations.getByName(vdmConfigurationName)
         val dependencies = vdmConfiguration.dependencies.map { d ->
             PomRewriter.Dependency(
-                    d.group ?: throw IllegalStateException("Dependency has null group id"),
-                    d.name,
-                    d.version ?: throw IllegalStateException("Dependency has null version"),
-                    null,
-                    "zip",
-                    "compile"
+                    groupId = d.group ?: throw IllegalStateException("Dependency has null group id"),
+                    artifactId = d.name,
+                    version = d.version ?: throw IllegalStateException("Dependency has null version"),
+                    scope = "compile"
             )
         }
         pomRewriter.addDependencies(dependencies)

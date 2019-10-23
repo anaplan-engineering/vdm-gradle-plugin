@@ -67,6 +67,22 @@ class PublishAndDependencyTest(
                             checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "b", projectDir = projectDir, repository = repository)
                             checkDependency(dependencyName = "a", projectDir = projectDir)
                         })),
+                test("publishAndConsumeLib",
+                        Project(projectName = "javalib", onBuild = { _, _ -> }),
+                        Project(projectName = "vdmlib", onBuild = { projectDir, repository ->
+                            checkPackagedAndPublished(main = true, test = true, md = false, doc = true, projectName = "vdmlib", projectDir = projectDir, repository = repository)
+                            checkLibInstalled(dependencyName = "javalib", projectDir = projectDir)
+                        })),
+                test("publishAndConsumeTransitiveLib",
+                        Project(projectName = "javalib", onBuild = { _, _ -> }),
+                        Project(projectName = "vdmlib", onBuild = { projectDir, repository ->
+                            checkPackagedAndPublished(main = true, test = true, md = false, doc = true, projectName = "vdmlib", projectDir = projectDir, repository = repository)
+                            checkLibInstalled(dependencyName = "javalib", projectDir = projectDir)
+                        }),
+                        Project(projectName = "consumer", onBuild = { projectDir, repository ->
+                            checkPackagedAndPublished(main = true, test = true, md = false, doc = true, projectName = "consumer", projectDir = projectDir, repository = repository)
+                            checkLibInstalled(dependencyName = "javalib", projectDir = projectDir)
+                        })),
                 test("publishAndConsumeTransitiveMain",
                         Project(projectName = "a", onBuild = { projectDir, repository ->
                             checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "a", projectDir = projectDir, repository = repository)
@@ -237,6 +253,11 @@ class PublishAndDependencyTest(
                         }))
         )
 
+        private fun checkLibInstalled(dependencyName: String, dependencyVersion: String = "1.0.0", projectDir: File) {
+            val libFile = File(projectDir, "lib/$dependencyName-$dependencyVersion.jar")
+            Assert.assertTrue(libFile.exists())
+        }
+
         private fun checkDependency(dependencyName: String, dependencyType: String = "", present: Boolean = true, projectDir: File) {
             val dependencyPrefix = if (dependencyType.isEmpty()) "" else "$dependencyType-"
             val dependencyDir = File(projectDir, "build/vdm/${dependencyPrefix}dependencies/testing/$dependencyName")
@@ -278,7 +299,7 @@ class PublishAndDependencyTest(
             val projectDir = File(parentDir, project.projectName)
             executeBuild(
                     projectDir = projectDir,
-                    tasks = arrayOf("publish"),
+                    tasks = arrayOf("test", "publish"),
                     fail = !project.expectSuccess)
             project.onBuild(projectDir, repository)
         }

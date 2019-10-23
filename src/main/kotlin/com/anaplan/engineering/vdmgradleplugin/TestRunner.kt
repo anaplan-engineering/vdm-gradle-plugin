@@ -2,7 +2,7 @@
  * #%~
  * VDM Gradle Plugin
  * %%
- * Copyright (C) 2018 Anaplan Inc
+ * Copyright (C) 2018-9 Anaplan Inc
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -29,11 +29,13 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.internal.classloader.VisitableURLClassLoader
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 import org.overture.ast.definitions.SOperationDefinition
 import org.overture.interpreter.runtime.ContextException
 import org.overture.interpreter.runtime.Interpreter
 import org.overture.interpreter.runtime.ModuleInterpreter
+import org.overture.interpreter.util.Delegate
 import java.io.File
 import java.net.InetAddress
 import java.nio.file.Files
@@ -45,7 +47,7 @@ internal const val test = "test"
 internal fun Project.addTestTask() {
     createVdmTask(test, VdmTestRunTask::class.java)
     afterEvaluate {
-        val testTask = tasks.getByName(test) ?: throw GradleException("Cannot find VDM package task")
+        val testTask = tasks.getByName(test) ?: throw GradleException("Cannot find VDM test task")
         testTask.dependsOn(typeCheckTests)
         val checkTask = tasks.getByName(LifecycleBasePlugin.CHECK_TASK_NAME)
                 ?: throw GradleException("Cannot find check task")
@@ -90,6 +92,7 @@ open class VdmTestRunTask() : DefaultTask() {
         if (dialect != Dialect.vdmsl) {
             throw GradleException("Test running only defined for VDM-SL currently")
         }
+        makeVdmLibsAvailableForDelegation()
         val interpreter = loadSpecification()
         val testSuites = collectTests(interpreter)
         val testRunner = TestRunner(interpreter, logger)
@@ -102,6 +105,14 @@ open class VdmTestRunTask() : DefaultTask() {
         generateLaunchFiles(testResults)
         if (!testResults.all { it.succeeded }) {
             throw GradleException("There were test failures")
+        }
+    }
+
+    private fun makeVdmLibsAvailableForDelegation() {
+        // Requires a dependence on Gradle internal, but alternative is completely separate JVM which is far
+        // more work
+        locateFilesWithExtension(project.vdmLibDir, "jar").map { it.toURI().toURL() }.forEach { url ->
+            (Delegate::class.java.classLoader as VisitableURLClassLoader).addURL(url)
         }
     }
 

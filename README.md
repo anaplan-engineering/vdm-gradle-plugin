@@ -53,6 +53,10 @@ buildscript {
 
 Note that, this method will only work where there are no changes to the signatures of the VDMJ interface used by the plugin between Overture versions.
 
+### Gradle Version
+
+Support for Gradle 4.x was deprecated with the release of 2.7.0 of this plugin, users should upgrade to Gradle 5.0+.
+
 ## Using the plugin
 In order to use the plugin, the following must be added to a `build.gradle` file in the root of the specification project:
 
@@ -126,7 +130,32 @@ The specifications contained in these dependencies will be added to the list of 
 
 By default, the plugin will also look for and download any test or documentation source artifacts associated with each dependency. This enables test data to be easily shared between projects and for documenation to be aggregated to produce sites describing the holisitic behaviour of a system. This behaviour can be [configured](#configuration).
 
-Note that, it is not currently possible for the 'main' specification of one project to depend upong the 'test' specifications of another.
+Note that, it is not currently possible for the 'main' specification of one project to depend upon the 'test' specifications of another.
+
+#### External library dependencies
+
+Specifications can use external Java libraries (see Chapter 16 of the Overture IDE User Guide). These can be depended upon in the same way as other specification projects and these dependencies will be transitive in the same way.
+
+For example, we can add the following to our build.gradle file:
+
+```groovy
+dependencies {
+  vdm group: 'com.anaplan.engineering', name: 'overture-iso8601-vdm', version: '1.0.0'
+}
+```
+
+This will add a dependency to the VDM specification in `overture-iso8601-vdm` but transitively to the jar in `overture-iso8601-lib`. This jar will be added to the classpath when animating the projects tests, and it will also be added to the project's lib folder so that tests can be run from the Overture IDE.
+
+When creating a library specification, we can just depend upon a published jar library, for example:
+
+```groovy
+dependencies {
+  vdm group: 'com.anaplan.engineering', name: 'overture-iso8601-lib', version: '1.0.0'
+}
+```
+
+We would then need to add the VDM module that acted as an interface to the jar in our specification in the usual way.   
+   
 
 ## Tasks
 The Gradle lifecycle is controlled through tasks. Users can execute tasks from the command line and each task will perform some part of the build. The exact behaviour of a task can often be [configured](#configuration). 
