@@ -1,0 +1,17 @@
+module DoStuff
+
+imports
+  from VdmLib
+    functions
+       addOne renamed addOne
+
+exports all
+
+definitions
+
+functions
+
+  Stuff: nat +> nat
+  Stuff(a) == addOne(a) * 2
+
+end DoStuff

@@ -1,0 +1,18 @@
+module TestDoStuff
+
+imports
+  from DoStuff
+    functions
+      Stuff renamed Stuff
+
+exports all
+
+definitions
+
+operations
+
+  TestStuff: () ==> nat
+  TestStuff() == Stuff(5)
+  post RESULT = 12;
+
+end TestDoStuff

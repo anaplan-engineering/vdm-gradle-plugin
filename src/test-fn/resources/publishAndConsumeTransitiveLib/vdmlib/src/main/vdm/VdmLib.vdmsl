@@ -1,0 +1,12 @@
+module VdmLib
+
+exports all
+
+definitions
+
+functions
+
+  addOne: nat +> nat
+  addOne(a) == is not yet specified
+
+end VdmLib

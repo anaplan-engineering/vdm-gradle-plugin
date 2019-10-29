@@ -1,0 +1,29 @@
+group = "testing"
+version = "1.0.0"
+
+apply plugin: 'maven-publish'
+apply plugin: 'java'
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compileOnly group: 'org.overturetool.core', name: 'interpreter', version: '2.6.4'
+}
+
+publishing {
+    repositories {
+        maven {
+            url 'file://' + file('../.m2/repository').absolutePath
+        }
+    }
+
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+
+}
+

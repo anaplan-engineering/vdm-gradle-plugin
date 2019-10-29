@@ -2,7 +2,7 @@
  * #%~
  * VDM Gradle Plugin
  * %%
- * Copyright (C) 2018 Anaplan Inc
+ * Copyright (C) 2018-9 Anaplan Inc
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -41,6 +41,7 @@ class VdmGradlePlugin : Plugin<Project> {
         project.extensions.create("vdm", VdmConfigExtension::class.java, project.objects)
         project.configurations.create(vdmConfigurationName)
         project.addBase()
+        project.addCleanLibsTask()
         project.addDependencyUnpackTask()
         project.addTypeCheckTasks()
         project.addTestTask()
@@ -79,6 +80,9 @@ internal val Project.vdmGenDocsDir
 internal val Project.vdmBuildDir
     get() = File(buildDir, "vdm")
 
+internal val Project.vdmLibDir
+    get() = File(projectDir, "lib")
+
 internal val Project.vdmDependencyDir
     get() = File(vdmBuildDir, "dependencies")
 
@@ -87,6 +91,9 @@ internal val Project.vdmMdDependencyDir
 
 internal val Project.vdmTestDependencyDir
     get() = File(vdmBuildDir, "test-dependencies")
+
+internal val Project.vdmLibDependencyDir
+    get() = File(vdmBuildDir, "lib-dependencies")
 
 internal val Project.generatedLibFile
     get() = File(vdmBuildDir, "generated.lib")
