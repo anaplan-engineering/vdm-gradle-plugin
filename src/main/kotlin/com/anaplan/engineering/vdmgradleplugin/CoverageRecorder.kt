@@ -25,11 +25,10 @@ import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
 import org.overture.ast.lex.LexLocation
 import org.overture.interpreter.runtime.ModuleInterpreter
-import org.slf4j.Logger
 import java.io.File
 
 internal class CoverageRecorder(
-        private val sourceDir: File,
+        private val sourceDir: File?,
         private val coverageDir: File,
         private val logger: Logger
 ) {
@@ -122,7 +121,7 @@ internal class CoverageRecorder(
     }
 
     private fun generateCoverage(interpreter: ModuleInterpreter) =
-            interpreter.modules.filter { it.files.all { it.startsWith(sourceDir) } }.flatMap { module ->
+            interpreter.modules.filter { sourceDir == null || it.files.all { it.startsWith(sourceDir) } }.flatMap { module ->
                 module.files.map { file ->
                     val locationCoverage = LexLocation.getSourceLocations(file).map { location ->
                         Location(
