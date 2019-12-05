@@ -91,6 +91,7 @@ open class VdmTestRunTask() : JavaExec() {
     }
 
     private fun createClassPathJar(): File {
+        println(project.buildscript.configurations.getByName("classpath").files())
         val classpath = project.buildscript.configurations.getByName("classpath").plus(
                 project.configurations.getByName(vdmConfigurationName)
         ).filter { it.extension == "jar" }

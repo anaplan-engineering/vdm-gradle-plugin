@@ -21,8 +21,19 @@ sourceSets {
     functionalTest {
         kotlin.srcDir 'src/test-fn/kotlin'
         resources.srcDir 'src/test-fn/resources'
-        compileClasspath += sourceSets.main.output + configurations.testRuntime
-        runtimeClasspath += output + compileClasspath
+    }
+}
+
+task functionalTestClasspathJar(type: Jar) {
+    inputs.files(sourceSets.test.runtimeClasspath)
+            .withPropertyName("runtimeClasspath")
+            .withNormalizer(ClasspathNormalizer)
+    archiveName = "functionalTestClasspath.jar"
+    doFirst {
+        manifest {
+            def classpath = sourceSets.test.runtimeClasspath.files
+            attributes "Class-Path": classpath.collect { f -> f.toURI().toString() }.join(" ")
+        }
     }
 }
 
@@ -56,8 +67,10 @@ task functionalTest(type: Test) {
     group = LifecycleBasePlugin.VERIFICATION_GROUP
     testClassesDirs = sourceSets.functionalTest.output.classesDirs
     classpath = sourceSets.functionalTest.runtimeClasspath
+    systemProperty "functionalTestClasspathJar", functionalTestClasspathJar.archivePath.absolutePath
     outputs.upToDateWhen { false }
     mustRunAfter test
+    dependsOn functionalTestClasspathJar
 }
 
 check.dependsOn functionalTest
