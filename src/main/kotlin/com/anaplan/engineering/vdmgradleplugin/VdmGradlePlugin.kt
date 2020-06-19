@@ -146,11 +146,12 @@ internal fun locateFilesWithExtension(directory: File, vararg extensions: String
     return files.map { it.toFile() }
 }
 
+internal val isWindows = System.getProperty("os.name").toLowerCase().contains("windows")
+
 internal fun deleteDirectory(directory: File) {
     if (!directory.exists()) {
         return
     }
-    val isWindows = System.getProperty("os.name").toLowerCase().contains("windows")
     val fileVisitor = object : SimpleFileVisitor<Path>() {
         override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
             delete(file)

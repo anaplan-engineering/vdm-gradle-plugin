@@ -1,6 +1,9 @@
-plugins {
-    id("vdm")
+buildscript {
+    dependencies {
+        classpath files("%functionalTestClasspath.jar%")
+    }
 }
+
 
 group = "testing"
 version = "1.0.0"

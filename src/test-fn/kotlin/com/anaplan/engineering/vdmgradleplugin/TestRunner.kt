@@ -24,24 +24,38 @@ package com.anaplan.engineering.vdmgradleplugin
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import java.io.File
+import java.net.URLClassLoader
 
-internal fun executeBuild(
-        projectDir: File,
-        clean: Boolean = true,
-        tasks: Array<String> = arrayOf("build"),
-        fail: Boolean = false
-): BuildResult {
-    println("Executing build in ${projectDir.absolutePath}")
-    val cleanTasks = if (clean) arrayOf("clean") else arrayOf()
-    val runner = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments(*cleanTasks, *tasks, "--info", "--stacktrace")
-            .forwardStdOutput(File(projectDir, "out.log").printWriter())
-            .forwardStdError(File(projectDir, "err.log").printWriter())
-            .withPluginClasspath()
-    return if (fail) {
-        runner.buildAndFail()
-    } else {
-        runner.build()
+object TestRunner {
+
+    val functionalTestClasspathJar by lazy {
+        System.getProperty("functionalTestClasspathJar")
     }
+
+    internal fun executeBuild(
+            projectDir: File,
+            clean: Boolean = true,
+            tasks: Array<String> = arrayOf("build"),
+            fail: Boolean = false
+    ): BuildResult {
+        println("Executing build in ${projectDir.absolutePath}")
+        setClasspath(projectDir)
+        val cleanTasks = if (clean) arrayOf("clean") else arrayOf()
+        val runner = GradleRunner.create()
+                .withProjectDir(projectDir)
+                .withArguments(*cleanTasks, *tasks, "--info", "--stacktrace")
+                .forwardStdOutput(File(projectDir, "out.log").printWriter())
+                .forwardStdError(File(projectDir, "err.log").printWriter())
+        return if (fail) {
+            runner.buildAndFail()
+        } else {
+            runner.build()
+        }
+    }
+
+    private fun setClasspath(projectDir: File) {
+        val buildGradle = File(projectDir, "build.gradle")
+        buildGradle.writeText(buildGradle.readText().replace("%functionalTestClasspath.jar%", functionalTestClasspathJar))
+    }
+
 }

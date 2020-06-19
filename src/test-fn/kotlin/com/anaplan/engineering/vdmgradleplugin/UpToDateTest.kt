@@ -1,5 +1,6 @@
 package com.anaplan.engineering.vdmgradleplugin
 
+import com.anaplan.engineering.vdmgradleplugin.TestRunner.executeBuild
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert
 import org.junit.Test
@@ -1223,8 +1224,10 @@ class generateLaunchGenForAllTestUpToDateTest {
     """.trimMargin()
 
     private val useVdmPlugin = """
-        |plugins {
-        |    id("vdm")
+        |buildscript {
+        |    dependencies {
+        |        classpath files("${TestRunner.functionalTestClasspathJar}")
+        |    }
         |}
         |
         |apply plugin: 'vdm'

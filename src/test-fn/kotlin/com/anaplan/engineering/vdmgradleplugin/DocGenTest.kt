@@ -21,6 +21,7 @@
  */
 package com.anaplan.engineering.vdmgradleplugin
 
+import com.anaplan.engineering.vdmgradleplugin.TestRunner.executeBuild
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith

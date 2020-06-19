@@ -22,21 +22,15 @@
 package com.anaplan.engineering.vdmgradleplugin
 
 import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
-import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ResolvableArtifact
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
-import java.nio.file.FileVisitResult
 import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.SimpleFileVisitor
-import java.nio.file.attribute.BasicFileAttributes
 import java.time.LocalDateTime
 
 const val dependencyUnpack = "dependencyUnpack"
@@ -140,10 +134,22 @@ open class DependencyUnpackTask : DefaultTask() {
         if (!project.vdmLibDir.exists()) {
             project.vdmLibDir.mkdirs()
         }
-        // create a link to artifact within dependencies so we can track all libs installed via gradle
-        val dependencyLink = Files.createSymbolicLink(dependencyDirectory.toPath().resolve(file.name), file.toPath())
-        // install into lib directory for use in Overture and tests
-        Files.createSymbolicLink(project.vdmLibDir.toPath().resolve(file.name), dependencyLink)
+        // Cannot create symbolic links on windows -- https://bugs.openjdk.java.net/browse/JDK-8221852
+        val cachedLibLink = dependencyDirectory.toPath().resolve(file.name)
+        if (Files.exists(cachedLibLink)) {
+            Files.delete(cachedLibLink)
+        }
+        if (isWindows) {
+            // create a link to artifact within dependencies so we can track all libs installed via gradle
+            Files.createLink(cachedLibLink, file.toPath())
+            // install into lib directory for use in Overture and tests
+            Files.createLink(project.vdmLibDir.toPath().resolve(file.name), file.toPath())
+        } else {
+            // create a link to artifact within dependencies so we can track all libs installed via gradle
+            val dependencyLink = Files.createSymbolicLink(cachedLibLink, file.toPath())
+            // install into lib directory for use in Overture and tests
+            Files.createSymbolicLink(project.vdmLibDir.toPath().resolve(file.name), dependencyLink)
+        }
     }
 
     private fun unpackArtifact(id: ComponentArtifactIdentifier, file: File, dependencyBaseDirectory: File) {

@@ -59,7 +59,8 @@ internal fun cleanLibs(project: Project) {
         val buildDir = project.vdmBuildDir.toPath()
         Files.walkFileTree(libDir.toPath(), object : SimpleFileVisitor<Path>() {
             override fun visitFile(file: Path, attrs: BasicFileAttributes?): FileVisitResult {
-                if (Files.isSymbolicLink(file) && Files.readSymbolicLink(file).startsWith(buildDir)) {
+                if ((Files.isSymbolicLink(file) && Files.readSymbolicLink(file).startsWith(buildDir))
+                        || Files.exists(project.vdmLibDependencyDir.toPath().resolve(file.fileName))) {
                     Files.delete(file)
                 }
                 return FileVisitResult.CONTINUE
