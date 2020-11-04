@@ -47,7 +47,7 @@ internal fun Project.addVdmMavenPublishHook() {
 }
 
 private fun Project.addVdmMavenPublish() {
-    logger.info("Hooking VDM artifact publish into Maven publish")
+    logger.info("Hooking VDM artifact of ${project} into Maven publish")
 
     afterEvaluate { project ->
         val publishingExtension = project.extensions.getByType(PublishingExtension::class.java)
@@ -70,9 +70,7 @@ private fun Project.addVdmMavenPublish() {
         if (task.name == "generatePomFileForVdmPublication") {
             task.dependsOn(addAttachedArtifactsTask)
             addVdmDependenciesToPomTask.dependsOn(task)
-        }
-        if (task.name.startsWith("publishVdmPublication")) {
-            task.dependsOn(addVdmDependenciesToPomTask)
+            task.finalizedBy(addVdmDependenciesToPomTask)
         }
         if (task.name == "publish" || task.name.startsWith("publishToMavenLocal")) {
             task.dependsOn(addAttachedArtifactsTask)
@@ -82,20 +80,6 @@ private fun Project.addVdmMavenPublish() {
     project.tasks.whenTaskAdded(addTaskDependencies)
 }
 
-private class MavenArtifactAdapter(
-        val f: File,
-        val e: String,
-        val c: String
-) : MavenArtifact {
-    override fun getExtension() = e
-    override fun getFile() = f
-    override fun setExtension(p0: String?) {}
-    override fun setClassifier(p0: String?) {}
-    override fun getBuildDependencies() = null
-    override fun getClassifier() = c
-    override fun builtBy(vararg p0: Any?) {}
-}
-
 open class AddVdmAttachedArtifactsTask : DefaultTask() {
     @TaskAction
     fun addAttachedArtifacts() {
@@ -103,15 +87,24 @@ open class AddVdmAttachedArtifactsTask : DefaultTask() {
         val mavenPublication = publishingExtension.publications.getByName(publicationName) as MavenPublication
         if (project.vdmTestPackageFile.exists() && mavenPublication.artifacts.none { it.file == project.vdmTestPackageFile }) {
             logger.info("Marking test artifact for publication")
-            mavenPublication.artifact(MavenArtifactAdapter(project.vdmTestPackageFile, "zip", "test"))
+            mavenPublication.artifact(project.vdmTestPackageFile) { artifact ->
+                artifact.classifier = "test"
+                artifact.extension = "zip"
+            }
         }
         if (project.vdmMdPackageFile.exists() && mavenPublication.artifacts.none { it.file == project.vdmMdPackageFile }) {
             logger.info("Marking md artifact for publication")
-            mavenPublication.artifact(MavenArtifactAdapter(project.vdmMdPackageFile, "zip", "md"))
+            mavenPublication.artifact(project.vdmMdPackageFile) { artifact ->
+                artifact.classifier = "md"
+                artifact.extension = "zip"
+            }
         }
         if (project.docPackageFile.exists() && mavenPublication.artifacts.none { it.file == project.docPackageFile }) {
             logger.info("Marking doc artifact for publication")
-            mavenPublication.artifact(MavenArtifactAdapter(project.docPackageFile, "zip", "doc"))
+            mavenPublication.artifact(project.docPackageFile) { artifact ->
+                artifact.classifier = "doc"
+                artifact.extension = "zip"
+            }
         }
     }
 }

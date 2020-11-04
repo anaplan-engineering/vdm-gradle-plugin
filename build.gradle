@@ -1,16 +1,17 @@
 plugins {
-    id "org.jetbrains.kotlin.jvm" version "1.3.21"
+    id "org.jetbrains.kotlin.jvm" version "1.3.50"
 }
 
 group = 'com.anaplan.engineering'
-version = '2.6.5-SNAPSHOT'
+version = '2.6.4.25'
 
 apply plugin: 'kotlin'
 apply plugin: 'java-gradle-plugin'
+apply plugin: 'maven-publish'
 
 ext {
-    kotlinVersion = "1.3.21"
-    overtureVersion = project.version
+    kotlinVersion = "1.3.50"
+    overtureVersion = "2.6.4"
 }
 
 repositories {
@@ -80,6 +81,20 @@ gradlePlugin {
         vdm {
             id = "vdm"
             implementationClass = "com.anaplan.engineering.vdmgradleplugin.VdmGradlePlugin"
+        }
+    }
+}
+
+
+// Using artifactory plugin appears broken -- https://github.com/gradle/gradle/issues/4783
+publishing {
+    repositories {
+        maven {
+            credentials {
+                username System.env.ART_USERNAME
+                password System.env.ART_PASSWORD
+            }
+            url findProperty('ART_URL')
         }
     }
 }

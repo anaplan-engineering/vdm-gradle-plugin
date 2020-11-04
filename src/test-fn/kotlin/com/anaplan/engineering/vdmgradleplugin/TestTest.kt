@@ -30,28 +30,29 @@ import java.io.File
 
 @RunWith(Parameterized::class)
 class TestTest(
-        private val testName: String,
-        private val expectSuccess: Boolean
+    private val testName: String,
+    private val expectSuccess: Boolean
 ) {
 
     companion object {
         @JvmStatic
         @Parameterized.Parameters(name = "{0}")
         fun example() = arrayOf(
-                test(testName = "passingTest"),
-                test(testName = "failingTest", expectSuccess = false),
-                test(testName = "erroredTest", expectSuccess = false),
-                test(testName = "expectedPreAndGotTest"),
-                test(testName = "expectedPreAndDidntGetTest", expectSuccess = false),
-                test(testName = "expectedPostAndGotTest"),
-                test(testName = "expectedPostAndDidntGetTest", expectSuccess = false),
-                test(testName = "expectedInvAndGotTest"),
-                test(testName = "expectedInvAndDidntGetTest", expectSuccess = false)
+            test(testName = "passingTest"),
+            test(testName = "failingTest", expectSuccess = false),
+            test(testName = "erroredTest", expectSuccess = false),
+            test(testName = "expectedPreAndGotTest"),
+            test(testName = "expectedPreAndDidntGetTest", expectSuccess = false),
+            test(testName = "expectedPostAndGotTest"),
+            test(testName = "expectedPostAndDidntGetTest", expectSuccess = false),
+            test(testName = "expectedInvAndGotTest"),
+            test(testName = "expectedInvAndDidntGetTest", expectSuccess = false),
+            test(testName = "multiWithDependencyPassingTest")
         )
 
         private fun test(
-                testName: String,
-                expectSuccess: Boolean = true
+            testName: String,
+            expectSuccess: Boolean = true
         ): Array<Any> = arrayOf(testName, expectSuccess)
     }
 
@@ -59,9 +60,9 @@ class TestTest(
     fun testTest() {
         val dir = File(javaClass.getResource("/$testName").toURI())
         executeBuild(
-                projectDir = dir,
-                tasks = arrayOf("test"),
-                fail = !expectSuccess)
+            projectDir = dir,
+            tasks = arrayOf("test"),
+            fail = !expectSuccess)
         val junitFile = File(dir, "build/vdm/junitreports/TEST-TestTest.xml")
         Assert.assertTrue(junitFile.exists())
     }

@@ -1,0 +1,5 @@
+rootProject.name = "compositePassingTest"
+
+includeBuild("a")
+includeBuild("b")
+includeBuild("c")

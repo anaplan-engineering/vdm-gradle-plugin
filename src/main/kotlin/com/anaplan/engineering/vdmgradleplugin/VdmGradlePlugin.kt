@@ -29,11 +29,10 @@ import org.overture.interpreter.runtime.Interpreter
 import org.overture.interpreter.util.ExitStatus
 import java.io.File
 import java.io.IOException
-import java.nio.file.FileVisitResult
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.SimpleFileVisitor
+import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributes
+import java.util.*
+import kotlin.collections.ArrayList
 
 class VdmGradlePlugin : Plugin<Project> {
 
@@ -142,7 +141,8 @@ internal fun locateFilesWithExtension(directory: File, vararg extensions: String
             return FileVisitResult.CONTINUE
         }
     }
-    Files.walkFileTree(directory.toPath(), fileVisitor)
+    val opts = EnumSet.of<FileVisitOption>(FileVisitOption.FOLLOW_LINKS)
+    Files.walkFileTree(directory.toPath(), opts, Int.MAX_VALUE, fileVisitor)
     return files.map { it.toFile() }
 }
 
@@ -183,3 +183,4 @@ internal fun Project.loadBinarySpecification(binary: File, vararg otherFiles: Fi
     }
     return controller.getInterpreter()
 }
+

@@ -1,0 +1,16 @@
+buildscript {
+    dependencies {
+        classpath files("%functionalTestClasspath.jar%")
+    }
+}
+
+repositories {
+    mavenLocal()
+}
+
+apply plugin: 'vdm'
+
+dependencies {
+    vdm "com.acme:a:1.0"
+    vdm "com.anaplan.system-specification:type:0.0.7"
+}

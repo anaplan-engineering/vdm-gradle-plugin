@@ -36,6 +36,8 @@ open class VdmConfigExtension @javax.inject.Inject constructor(objectFactory: Ob
     var resourceFileTypes: Array<String> = arrayOf("svg", "png", "gif")
     var autoDocGeneration: Boolean = true
     var recordCoverage: Boolean = false
+    var overtureJvmArgs: List<String> = listOf()
+    var monitorOvertureMemory: Boolean = false
     var testLaunchGeneration: TestLaunchGeneration = TestLaunchGeneration.FAILING
 
     fun packaging(action: Action<Packaging>) {

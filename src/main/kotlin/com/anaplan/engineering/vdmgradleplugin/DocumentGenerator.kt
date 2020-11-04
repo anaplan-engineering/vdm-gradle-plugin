@@ -66,6 +66,7 @@ internal fun Project.addDocGenTask() {
 
 private val prettyPrinter = VdmPrettyPrinter(MathematicalUnicodeHtmlRenderStrategy(header = "", footer = ""))
 
+@CacheableTask
 open class DocGenTask : DefaultTask() {
 
     val dialect: Dialect
@@ -74,6 +75,7 @@ open class DocGenTask : DefaultTask() {
 
     val generatedLibFile: File
         @InputFile
+        @PathSensitive(PathSensitivity.RELATIVE)
         get() = project.generatedLibFile
 
     val vdmGenDocsDir: File
@@ -84,14 +86,17 @@ open class DocGenTask : DefaultTask() {
             get() = project.vdmConfig.resourceFileTypes
 
     val resourceFiles: FileCollection
+        @PathSensitive(PathSensitivity.RELATIVE)
         @InputFiles
         get() = project.files(locateFilesWithExtension(project.vdmMdDir, *resourceTypes))
 
     val mdSourceFiles: FileCollection
+        @PathSensitive(PathSensitivity.RELATIVE)
         @InputFiles
         get() = project.files(locateFilesWithExtension(project.vdmMdDir, "md"))
 
     val mdDependencies: FileCollection
+        @PathSensitive(PathSensitivity.RELATIVE)
         @InputFiles
         get() = project.files(locateFilesWithExtension(project.vdmMdDependencyDir, "md", *resourceTypes))
 
