@@ -1,16 +1,17 @@
 plugins {
-    id "org.jetbrains.kotlin.jvm" version "1.3.21"
+    id "org.jetbrains.kotlin.jvm" version "1.3.50"
 }
 
 group = 'com.anaplan.engineering'
-version = '2.6.5-SNAPSHOT'
+version = '2.6.4.15'
 
 apply plugin: 'kotlin'
+apply plugin: 'maven-publish'
 apply plugin: 'java-gradle-plugin'
 
 ext {
-    kotlinVersion = "1.3.21"
-    overtureVersion = project.version
+    kotlinVersion = "1.3.50"
+    overtureVersion = "2.6.4"
 }
 
 repositories {

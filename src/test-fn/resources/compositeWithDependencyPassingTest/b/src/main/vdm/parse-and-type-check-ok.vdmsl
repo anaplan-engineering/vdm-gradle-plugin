@@ -1,0 +1,10 @@
+module MainB
+exports all
+
+definitions
+
+values
+
+y : nat = 1
+
+end MainB

@@ -22,20 +22,44 @@
 package com.anaplan.engineering.vdmgradleplugin
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.internal.artifacts.ivyservice.resolveengine.result.ComponentSelectionReasons
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.language.base.plugins.LifecycleBasePlugin
 import java.io.File
 import java.nio.file.Files
 import java.time.LocalDateTime
 
 const val dependencyUnpack = "dependencyUnpack"
 
-internal fun Project.addDependencyUnpackTask() = createVdmTask(dependencyUnpack, DependencyUnpackTask::class.java)
+internal fun Project.addDependencyUnpackTask() {
+    val localTask = createVdmTask(dependencyUnpack, DependencyUnpackTask::class.java)
+    afterEvaluate {
+        val vdmConfiguration = project.configurations.getByName(vdmConfigurationName)
+        vdmConfiguration.dependencies.filterIsInstance<ProjectDependency>().forEach {
+            val plugins = it.dependencyProject.plugins
+            if (plugins.findPlugin("vdm") != null) {
+                val dependencyTask = it.dependencyProject.tasks.getByName(dependencyUnpack)
+                        ?: throw GradleException("Cannot find unpack task in project dependency")
+                localTask.dependsOn(dependencyTask)
+            } else if (plugins.findPlugin("java") != null) {
+                val assembleTask = it.dependencyProject.tasks.getByName(LifecycleBasePlugin.ASSEMBLE_TASK_NAME)
+                        ?: throw GradleException("Cannot find unpack task in project dependency")
+                localTask.dependsOn(assembleTask)
+            } else {
+                throw GradleException("Don't know what to do with project $it")
+            }
+        }
+    }
+}
 
 open class DependencyUnpackTask : DefaultTask() {
 
@@ -75,11 +99,14 @@ open class DependencyUnpackTask : DefaultTask() {
 
     @TaskAction
     fun unpack() {
+        println("UNPACK START $project")
         vdmConfiguration.resolutionStrategy.failOnVersionConflict()
         unpackSpecifications()
         installLibs()
         unpackTests()
         unpackDocumentation()
+
+        println("UNPACK END $project")
     }
 
     // TODO - finer grained control
@@ -112,8 +139,86 @@ open class DependencyUnpackTask : DefaultTask() {
     }
 
     private fun unpackSpecifications() {
-        vdmConfiguration.incoming.artifactsWithType("zip").forEach { artifact ->
-            unpackArtifact(artifact.id, artifact.file, vdmDependencyDir)
+        vdmConfiguration.resolve()
+        println(vdmConfiguration.incoming.artifacts.map { it.id })
+        println(project.allprojects)
+//        vdmConfiguration.incoming.
+        println(project.childProjects)
+        println(project.subprojects)
+        println(project.components)
+
+
+        vdmConfiguration.incoming.resolutionResult.allComponents.forEach { component ->
+            val reasons = component.selectionReason.descriptions
+            when {
+                ComponentSelectionReasons.COMPOSITE_BUILD in reasons -> {
+                    throw GradleException("Composite builds requiring substitution are not supported")
+                }
+                ComponentSelectionReasons.REQUESTED in reasons -> {
+                    logger.info("Unpacking artifacts for requested component: ${component.id}")
+                    when (component.id) {
+                        is ModuleComponentIdentifier -> {
+                            vdmConfiguration.incoming.artifactsWithType("zip").filter {
+                                it.id.componentIdentifier == component.id
+                            }.forEach { artifact ->
+                                unpackArtifact(artifact.id, artifact.file, vdmDependencyDir)
+                            }
+                        }
+                        is ProjectComponentIdentifier -> {
+                            val projectId = component.id as ProjectComponentIdentifier
+                            logger.info("Link to project: $projectId")
+                            val dependency = project.findProject(projectId.projectPath)
+                                    ?: throw GradleException("References unlocatable dependency $projectId")
+
+
+                            val plugins = dependency.plugins
+                            if (plugins.findPlugin("vdm") != null) {
+                                val dependencyLink = File(vdmDependencyDir, "${dependency.group}/${dependency.name}")
+                                if (dependencyLink.exists()) {
+                                    dependencyLink.delete()
+                                }
+                                createLink(dependencyLink, dependency.vdmSourceDir)
+
+                                val groupDirs = dependency.vdmDependencyDir.listFiles()?.filter { it.isDirectory }
+                                        ?: emptyList()
+                                groupDirs.forEach { groupDir ->
+                                    val moduleDirs = groupDir.listFiles()?.filter { it.isDirectory } ?: emptyList()
+                                    moduleDirs.forEach { moduleDir ->
+                                        val transDependencyLink = File(vdmDependencyDir, "${groupDir.name}/${moduleDir.name}")
+                                        if (transDependencyLink.exists()) {
+                                            // check its the same?
+                                        } else {
+                                            createLink(transDependencyLink, moduleDir)
+                                        }
+                                    }
+                                }
+
+                                dependency.vdmLibDependencyDir.listFiles()?.filter {
+                                    it.extension == "jar"
+                                }?.forEach {
+                                    installLib(it, vdmLibDependencyDir)
+                                }
+                            } else if (plugins.findPlugin("java") != null) {
+                                installLib(dependency.vdmPackageFile, vdmLibDependencyDir)
+                            } else {
+                                throw GradleException("Don't know what to do with project $projectId")
+                            }
+                        }
+                    }
+                }
+                ComponentSelectionReasons.ROOT in reasons -> {
+                }
+                else -> throw GradleException("Unsupported dependency on ${component.id} reasons $reasons")
+            }
+        }
+    }
+
+    private fun createLink(from: File, to: File) {
+        from.parentFile.mkdirs()
+        if (isWindows) {
+            Files.createLink(from.toPath(), to.toPath())
+        } else {
+            Files.createSymbolicLink(from.toPath(), to.toPath())
         }
     }
 

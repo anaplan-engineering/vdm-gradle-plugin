@@ -28,9 +28,10 @@ import org.overture.interpreter.VDMSL
 import org.overture.interpreter.runtime.Interpreter
 import org.overture.interpreter.util.ExitStatus
 import java.io.File
+import java.util.*
 
 enum class Dialect(val fileExtension : String, val createController : () -> GradleVdm) {
-    vdmsl("vdmsl", { GradleVdmSl() }),
+    vdmsl("vdmsl", { GradleVdmSl(java.util.UUID.randomUUID()) }),
     vdmpp("vdmpp", { GradleVdmPp() }),
     vdmrt("vdmrt", { GradleVdmRt() }),
 }
@@ -45,9 +46,10 @@ interface GradleVdm {
     fun getInterpreter(): Interpreter
 }
 
-open class GradleVdmSl() : VDMSL(), GradleVdm {
+open class GradleVdmSl(val uuid: UUID) : VDMSL(), GradleVdm {
 
     override fun setOutfile(outfile : String) {
+        println("Set outfile: $uuid, $outfile")
         VDMJ.outfile = outfile
     }
 

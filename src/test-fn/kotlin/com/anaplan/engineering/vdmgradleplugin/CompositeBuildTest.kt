@@ -21,7 +21,7 @@
  */
 package com.anaplan.engineering.vdmgradleplugin
 
-import com.anaplan.engineering.vdmgradleplugin.TestRunner.executeBuild
+import com.anaplan.engineering.vdmgradleplugin.TestRunner.executeCompositeBuild
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,7 +29,7 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class TestTest(
+class CompositeBuildTest(
         private val testName: String,
         private val expectSuccess: Boolean
 ) {
@@ -38,16 +38,7 @@ class TestTest(
         @JvmStatic
         @Parameterized.Parameters(name = "{0}")
         fun example() = arrayOf(
-//                test(testName = "passingTest"),
-//                test(testName = "failingTest", expectSuccess = false),
-//                test(testName = "erroredTest", expectSuccess = false),
-//                test(testName = "expectedPreAndGotTest"),
-//                test(testName = "expectedPreAndDidntGetTest", expectSuccess = false),
-//                test(testName = "expectedPostAndGotTest"),
-//                test(testName = "expectedPostAndDidntGetTest", expectSuccess = false),
-//                test(testName = "expectedInvAndGotTest"),
-//                test(testName = "expectedInvAndDidntGetTest", expectSuccess = false),
-                        test(testName = "multiWithDependencyPassingTest")
+                test(testName = "compositeWithDependency")
         )
 
         private fun test(
@@ -57,14 +48,12 @@ class TestTest(
     }
 
     @Test
-    fun testTest() {
+    fun compositeBuildTest() {
         val dir = File(javaClass.getResource("/$testName").toURI())
-        executeBuild(
+        executeCompositeBuild(
                 projectDir = dir,
-                tasks = arrayOf("test"),
+                tasks = arrayOf("build"),
                 fail = !expectSuccess)
-        val junitFile = File(dir, "build/vdm/junitreports/TEST-TestTest.xml")
-        Assert.assertTrue(junitFile.exists())
     }
 
 }

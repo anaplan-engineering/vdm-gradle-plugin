@@ -49,11 +49,7 @@ internal fun Project.addTestTask() {
     }
 }
 
-open class VdmTestRunTask() : JavaExec() {
-
-    val dialect: Dialect
-        @Input
-        get() = project.vdmConfig.dialect
+open class VdmTestRunTask() : OvertureTask() {
 
     val recordCoverage: Boolean
         @Input
@@ -84,28 +80,9 @@ open class VdmTestRunTask() : JavaExec() {
         if (dialect != Dialect.vdmsl) {
             throw GradleException("Test running only defined for VDM-SL currently")
         }
-        super.setMain("com.anaplan.engineering.vdmgradleplugin.ForkedTestRunnerKt")
         super.setArgs(constructArgs())
         super.setClasspath(project.files(createClassPathJar()))
         super.exec()
-    }
-
-    private fun createClassPathJar(): File {
-        println(project.buildscript.configurations.getByName("classpath").files())
-        val classpath = project.buildscript.configurations.getByName("classpath").plus(
-                project.configurations.getByName(vdmConfigurationName)
-        ).filter { it.extension == "jar" }
-
-        val manifestClassPath = classpath.map { it.toURI() }.joinToString(" ")
-        val manifest = Manifest()
-        val attributes = manifest.mainAttributes
-        attributes[Attributes.Name.MANIFEST_VERSION] = "1.0.0"
-        attributes[Attributes.Name("Class-Path")] = manifestClassPath
-
-        val jarFile = File(project.vdmBuildDir, "testClassPath.jar")
-        val os: OutputStream = FileOutputStream(jarFile)
-        JarOutputStream(os, manifest).close()
-        return jarFile
     }
 
     private fun constructArgs() =
@@ -116,6 +93,7 @@ open class VdmTestRunTask() : JavaExec() {
             } +
                     listOf(
                             "--log-level", project.gradle.startParameter.logLevel,
+                            "--run-tests", true,
                             "--report-target-dir", reportDir.absolutePath,
                             "--launch-target-dir", launchDir.absolutePath,
                             "--test-launch-generation", testLaunchGeneration.name,
