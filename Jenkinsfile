@@ -4,7 +4,6 @@ import com.anaplan.buildtools.jenkins_pipelines.DefaultConfig
 @Library('Anaplan_Pipeline')
 
 def BUILD_LABEL = "vdm-gradle-plugin.${UUID.randomUUID().toString()}"
-def SERVICE = "specification"
 
 pipeline {
     agent {
@@ -21,20 +20,12 @@ pipeline {
     }
 
     stages {
-        stage('Init') {
-            steps {
-                container('gradle') {
-                }
-                arcusInit(projectName: SERVICE, branch: env.BRANCH_NAME)
-            }
-        }
-
         stage('Build & Test') {
             steps {
                 script {
                     container('gradle') {
                         try {
-                            sh "./gradlew check"
+                            sh "./gradlew check -x functionalTest"
                         } finally {
                             junit '**/build/vdm/junitreports/*.xml'
                         }
@@ -53,9 +44,6 @@ pipeline {
                     )]) {
                         sh "./gradlew -PART_URL=https://artifacts.anaplan-np.net/artifactory -PART_REPO=anaplan-develop artifactoryPublish"
                     }
-                }
-                script {
-                    tagGitCommit(env.VERSION)
                 }
             }
         }
