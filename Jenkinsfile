@@ -27,7 +27,7 @@ pipeline {
                         try {
                             sh "./gradlew check -x functionalTest"
                         } finally {
-                            junit '**/build/vdm/junitreports/*.xml'
+                            junit '**/build/test-results/**/*.xml'
                         }
                     }
                 }
