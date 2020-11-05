@@ -88,10 +88,10 @@ gradlePlugin {
 }
 
 artifactory {
-    contextUrl = getProperty("ART_URL")
+    contextUrl = findProperty("ART_URL")
     publish {
         repository {
-            repoKey = getProperty("ART_REPO")
+            repoKey = findProperty("ART_REPO")
             username = System.env.ART_USERNAME 
             password = System.env.ART_PASSWORD 
         }
