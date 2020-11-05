@@ -80,6 +80,9 @@ open class VdmTestRunTask() : OvertureTask() {
         if (dialect != Dialect.vdmsl) {
             throw GradleException("Test running only defined for VDM-SL currently")
         }
+        jvmArgs = project.vdmConfig.overtureJvmArgs
+        println("111JVM ARGS: ${project.vdmConfig.overtureJvmArgs}")
+        println("222JVM ARGS: ${jvmArgs}")
         super.setArgs(constructArgs())
         super.setClasspath(project.files(createClassPathJar()))
         super.exec()

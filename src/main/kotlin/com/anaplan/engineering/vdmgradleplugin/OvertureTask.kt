@@ -21,7 +21,6 @@ abstract class OvertureTask : JavaExec() {
 
     init {
         mainClass.set("com.anaplan.engineering.vdmgradleplugin.OvertureWrapperKt")
-        jvmArgs = project.vdmConfig.overtureJvmArgs
     }
 
     protected fun createClassPathJar(): File {

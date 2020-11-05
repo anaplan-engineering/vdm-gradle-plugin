@@ -55,6 +55,10 @@ open class VdmTypeCheckTask(private val includeTests: Boolean) : OvertureTask() 
 
     override fun exec() {
         logger.info("VDM dialect: $dialect")
+        jvmArgs = project.vdmConfig.overtureJvmArgs
+        println("111JVM ARGS: ${project.vdmConfig.overtureJvmArgs}")
+        println("222JVM ARGS: ${jvmArgs}")
+        println(maxHeapSize)
         super.setArgs(constructArgs())
         super.setClasspath(project.files(createClassPathJar()))
         super.exec()
