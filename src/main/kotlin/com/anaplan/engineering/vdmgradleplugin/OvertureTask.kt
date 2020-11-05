@@ -13,6 +13,7 @@ import java.util.jar.Manifest
 
 abstract class OvertureTask : JavaExec() {
 
+
     val dialect: Dialect
         @Input
         get() = project.vdmConfig.dialect
@@ -20,6 +21,7 @@ abstract class OvertureTask : JavaExec() {
 
     init {
         mainClass.set("com.anaplan.engineering.vdmgradleplugin.OvertureWrapperKt")
+        jvmArgs = project.vdmConfig.overtureJvmArgs
     }
 
     protected fun createClassPathJar(): File {
