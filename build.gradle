@@ -1,15 +1,13 @@
 plugins {
     id "org.jetbrains.kotlin.jvm" version "1.3.50"
-    id "com.jfrog.artifactory" version "4.9.8"
 }
 
 group = 'com.anaplan.engineering'
 version = '2.6.4.15'
 
 apply plugin: 'kotlin'
-apply plugin: 'maven-publish'
 apply plugin: 'java-gradle-plugin'
-apply plugin: "com.jfrog.artifactory"
+apply plugin: 'maven-publish'
 
 ext {
     kotlinVersion = "1.3.50"
@@ -87,28 +85,41 @@ gradlePlugin {
     }
 }
 
-artifactory {
-    contextUrl = findProperty("ART_URL")
-    publish {
-        repository {
-            repoKey = findProperty("ART_REPO")
-            username = System.env.ART_USERNAME 
-            password = System.env.ART_PASSWORD 
-        }
-        defaults {
-            publications("maven")
-            publishPom = true
-            publishIvy = false
-        }
-    }
-}
+
+// Using artifactory plugin appears broken -- https://github.com/gradle/gradle/issues/4783
+
+//plugins {
+//    id "com.jfrog.artifactory" version "4.18.0"
+//}
+//
+//apply plugin: 'com.jfrog.artifactory'
+//
+//artifactory {
+//    contextUrl = findProperty('ART_URL')
+//    publish {
+//        repository {
+//            repoKey = findProperty('ART_REPO')
+//            username = System.env.ART_USERNAME 
+//            password = System.env.ART_PASSWORD 
+//        }
+//        defaults {
+//            publications('pluginMaven', 'vdmPluginMarkerMaven')
+//            publishPom = true
+//            publishIvy = false
+//        }
+//    }
+//}
+//
+//
 
 publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
+    repositories {
+        maven {
+            credentials {
+                username System.env.ART_USERNAME
+                password System.env.ART_PASSWORD
+            }
+            url findProperty('ART_URL')
         }
     }
 }
-
-
