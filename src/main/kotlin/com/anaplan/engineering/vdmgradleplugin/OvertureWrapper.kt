@@ -12,9 +12,12 @@ import java.io.File
 import java.io.PrintStream
 import java.net.InetAddress
 import java.nio.file.Files
+import java.text.CharacterIterator
+import java.text.StringCharacterIterator
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.system.exitProcess
+
 
 internal val timestampFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
@@ -110,7 +113,40 @@ class OvertureWrapper(parser: ArgParser) {
 
     private val logger = Logger(logLevel)
 
+    class Monitor : Thread() {
+
+        init {
+            isDaemon = true
+        }
+
+        fun humanReadableByteCountBin(bytes: Long): String? {
+            val absB = if (bytes == Long.MIN_VALUE) Long.MAX_VALUE else Math.abs(bytes)
+            if (absB < 1024) {
+                return "$bytes B"
+            }
+            var value = absB
+            val ci: CharacterIterator = StringCharacterIterator("KMGTPE")
+            var i = 40
+            while (i >= 0 && absB > 0xfffccccccccccccL shr i) {
+                value = value shr 10
+                ci.next()
+                i -= 10
+            }
+            value *= java.lang.Long.signum(bytes).toLong()
+            return String.format("%.1f %ciB", value / 1024.0, ci.current())
+        }
+
+        override fun run() {
+            while(true) {
+                sleep(10000)
+                val mem = humanReadableByteCountBin(Runtime.getRuntime().totalMemory())
+                println("MEM: $mem")
+            }
+        }
+    }
+
     fun run() {
+        Monitor().start()
         val interpreter = loadSpecification()
         if (runTests) {
             if (dialect != Dialect.vdmsl) {
