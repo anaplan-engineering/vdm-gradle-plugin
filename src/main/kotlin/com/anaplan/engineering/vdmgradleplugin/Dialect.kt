@@ -31,7 +31,7 @@ import java.io.File
 import java.util.*
 
 enum class Dialect(val fileExtension : String, val createController : () -> GradleVdm) {
-    vdmsl("vdmsl", { GradleVdmSl(java.util.UUID.randomUUID()) }),
+    vdmsl("vdmsl", { GradleVdmSl() }),
     vdmpp("vdmpp", { GradleVdmPp() }),
     vdmrt("vdmrt", { GradleVdmRt() }),
 }
@@ -46,7 +46,7 @@ interface GradleVdm {
     fun getInterpreter(): Interpreter
 }
 
-open class GradleVdmSl(val uuid: UUID) : VDMSL(), GradleVdm {
+open class GradleVdmSl : VDMSL(), GradleVdm {
 
     override fun setOutfile(outfile : String) {
         VDMJ.outfile = outfile
@@ -54,7 +54,7 @@ open class GradleVdmSl(val uuid: UUID) : VDMSL(), GradleVdm {
 
 }
 
-open class GradleVdmPp() : VDMPP(), GradleVdm {
+open class GradleVdmPp : VDMPP(), GradleVdm {
 
     override fun setOutfile(outfile : String) {
         VDMJ.outfile = outfile
@@ -62,7 +62,7 @@ open class GradleVdmPp() : VDMPP(), GradleVdm {
 
 }
 
-open class GradleVdmRt() : VDMRT(), GradleVdm {
+open class GradleVdmRt : VDMRT(), GradleVdm {
 
     override fun setOutfile(outfile : String) {
         VDMJ.outfile = outfile

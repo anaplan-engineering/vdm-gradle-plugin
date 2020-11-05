@@ -42,7 +42,7 @@ pipeline {
                             passwordVariable: 'ART_PASSWORD',
                             usernameVariable: 'ART_USERNAME'
                     )]) {
-                        sh "./gradlew -PART_URL=https://artifacts.anaplan-np.net/artifactory -PART_REPO=anaplan-develop artifactoryPublish"
+                        sh "./gradlew -PART_URL=https://artifacts.anaplan-np.net/artifactory -PART_REPO=anaplan-develop artifactoryPublish --info"
                     }
                 }
             }
