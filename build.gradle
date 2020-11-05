@@ -3,7 +3,6 @@ plugins {
 }
 
 group = 'com.anaplan.engineering'
-name = 'vdm-gradle-plugin'
 version = '2.6.4.15'
 
 apply plugin: 'kotlin'
