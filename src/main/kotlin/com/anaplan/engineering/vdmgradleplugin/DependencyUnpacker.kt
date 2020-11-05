@@ -99,14 +99,11 @@ open class DependencyUnpackTask : DefaultTask() {
 
     @TaskAction
     fun unpack() {
-        println("UNPACK START $project")
         vdmConfiguration.resolutionStrategy.failOnVersionConflict()
         unpackSpecifications()
         installLibs()
         unpackTests()
         unpackDocumentation()
-
-        println("UNPACK END $project")
     }
 
     // TODO - finer grained control
@@ -140,14 +137,6 @@ open class DependencyUnpackTask : DefaultTask() {
 
     private fun unpackSpecifications() {
         vdmConfiguration.resolve()
-        println(vdmConfiguration.incoming.artifacts.map { it.id })
-        println(project.allprojects)
-//        vdmConfiguration.incoming.
-        println(project.childProjects)
-        println(project.subprojects)
-        println(project.components)
-
-
         vdmConfiguration.incoming.resolutionResult.allComponents.forEach { component ->
             val reasons = component.selectionReason.descriptions
             when {
@@ -193,6 +182,55 @@ open class DependencyUnpackTask : DefaultTask() {
                                     }
                                 }
 
+
+                                if (autoDependTest) {
+                                    if (dependency.vdmTestSourceDir.exists()) {
+                                        val testDependencyLink = File(vdmTestDependencyDir, "${dependency.group}/${dependency.name}")
+                                        if (testDependencyLink.exists()) {
+                                            testDependencyLink.delete()
+                                        }
+                                        createLink(testDependencyLink, dependency.vdmTestSourceDir)
+                                    }
+
+                                    val testGroupDirs = dependency.vdmTestDependencyDir.listFiles()?.filter { it.isDirectory }
+                                            ?: emptyList()
+                                    testGroupDirs.forEach { groupDir ->
+                                        val moduleDirs = groupDir.listFiles()?.filter { it.isDirectory } ?: emptyList()
+                                        moduleDirs.forEach { moduleDir ->
+                                            val transDependencyLink = File(vdmTestDependencyDir, "${groupDir.name}/${moduleDir.name}")
+                                            if (transDependencyLink.exists()) {
+                                                // check its the same?
+                                            } else {
+                                                createLink(transDependencyLink, moduleDir)
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (autoDependMd) {
+                                    if (dependency.vdmMdDir.exists()) {
+                                        val mdDependencyLink = File(vdmMdDependencyDir, "${dependency.group}/${dependency.name}")
+                                        if (mdDependencyLink.exists()) {
+                                            mdDependencyLink.delete()
+                                        }
+                                        createLink(mdDependencyLink, dependency.vdmMdDir)
+                                    }
+
+                                    val mdGroupDirs = dependency.vdmMdDependencyDir.listFiles()?.filter { it.isDirectory }
+                                            ?: emptyList()
+                                    mdGroupDirs.forEach { groupDir ->
+                                        val moduleDirs = groupDir.listFiles()?.filter { it.isDirectory } ?: emptyList()
+                                        moduleDirs.forEach { moduleDir ->
+                                            val transDependencyLink = File(vdmMdDependencyDir, "${groupDir.name}/${moduleDir.name}")
+                                            if (transDependencyLink.exists()) {
+                                                // check its the same?
+                                            } else {
+                                                createLink(transDependencyLink, moduleDir)
+                                            }
+                                        }
+                                    }
+                                }
+
                                 dependency.vdmLibDependencyDir.listFiles()?.filter {
                                     it.extension == "jar"
                                 }?.forEach {
@@ -218,7 +256,7 @@ open class DependencyUnpackTask : DefaultTask() {
         if (isWindows) {
             Files.createLink(from.toPath(), to.toPath())
         } else {
-            Files.createSymbolicLink(from.toPath(), to.toPath())
+            Files.createSymbolicLink(from.toPath(), to.toPath().toRealPath())
         }
     }
 

@@ -23,11 +23,8 @@ abstract class OvertureTask : JavaExec() {
     }
 
     protected fun createClassPathJar(): File {
-        val libs = project.files(project.vdmLibDependencyDir.listFiles()?.filter { it.extension == "jar"})
-        println("CLASSPATH LIBS")
-        println(libs.map { it.name })
         val classpath = getAllClassPathConfig(project)
-                .plus(libs)
+                .plus(project.files(project.vdmLibDependencyDir.listFiles()?.filter { it.extension == "jar"}))
                 .filter { it.extension == "jar" }
         val manifestClassPath = classpath.map { it.toURI() }.joinToString(" ")
         val manifest = Manifest()

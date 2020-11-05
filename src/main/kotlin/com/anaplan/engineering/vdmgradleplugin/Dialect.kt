@@ -49,7 +49,6 @@ interface GradleVdm {
 open class GradleVdmSl(val uuid: UUID) : VDMSL(), GradleVdm {
 
     override fun setOutfile(outfile : String) {
-        println("Set outfile: $uuid, $outfile")
         VDMJ.outfile = outfile
     }
 
