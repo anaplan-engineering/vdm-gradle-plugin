@@ -13,7 +13,6 @@ import java.util.jar.Manifest
 
 abstract class OvertureTask : JavaExec() {
 
-
     val dialect: Dialect
         @Input
         get() = project.vdmConfig.dialect
