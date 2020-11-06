@@ -66,7 +66,8 @@ open class VdmTypeCheckTask(private val includeTests: Boolean) : OvertureTask() 
                     "--dialect", dialect.name,
                     "--log-level", project.gradle.startParameter.logLevel,
                     "--run-tests", false,
-                    "--output-lib", generatedLibFile.absolutePath
+                    "--output-lib", generatedLibFile.absolutePath,
+                    "--monitor-memory", project.vdmConfig.monitorOvertureMemory
             ) + specificationFiles.map { it.absolutePath }
 
 }

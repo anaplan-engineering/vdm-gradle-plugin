@@ -81,8 +81,6 @@ open class VdmTestRunTask() : OvertureTask() {
             throw GradleException("Test running only defined for VDM-SL currently")
         }
         jvmArgs = project.vdmConfig.overtureJvmArgs
-        println("111JVM ARGS: ${project.vdmConfig.overtureJvmArgs}")
-        println("222JVM ARGS: ${jvmArgs}")
         super.setArgs(constructArgs())
         super.setClasspath(project.files(createClassPathJar()))
         super.exec()
@@ -102,7 +100,8 @@ open class VdmTestRunTask() : OvertureTask() {
                             "--test-launch-generation", testLaunchGeneration.name,
                             "--test-launch-project-name", project.name,
                             "--coverage-source-dir", project.vdmSourceDir.absolutePath,
-                            "--test-source-dir", project.vdmTestSourceDir.absolutePath
+                            "--test-source-dir", project.vdmTestSourceDir.absolutePath,
+                            "--monitor-memory", project.vdmConfig.monitorOvertureMemory
                     ) + project.locateAllSpecifications(dialect, true).map { it.absolutePath }
 
 }

@@ -70,9 +70,7 @@ private fun Project.addVdmMavenPublish() {
         if (task.name == "generatePomFileForVdmPublication") {
             task.dependsOn(addAttachedArtifactsTask)
             addVdmDependenciesToPomTask.dependsOn(task)
-        }
-        if (task.name.startsWith("publishVdmPublication")) {
-            task.dependsOn(addVdmDependenciesToPomTask)
+            task.finalizedBy(addVdmDependenciesToPomTask)
         }
         if (task.name == "publish" || task.name.startsWith("publishToMavenLocal")) {
             task.dependsOn(addAttachedArtifactsTask)

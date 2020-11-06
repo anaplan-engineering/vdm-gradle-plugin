@@ -111,13 +111,19 @@ class OvertureWrapper(parser: ArgParser) {
         File(this)
     }
 
+    private val monitorMemory by parser.storing("Regularly log memory reserved by the Overture process") {
+        this.toBoolean()
+    }.default(false)
+
     private val logger = Logger(logLevel)
 
-    class Monitor : Thread() {
+    private class Monitor(private val logLevel: GradleLogLevel) : Thread() {
 
         init {
             isDaemon = true
         }
+
+        private val logger = Logger(logLevel)
 
         fun humanReadableByteCountBin(bytes: Long): String? {
             val absB = if (bytes == Long.MIN_VALUE) Long.MAX_VALUE else Math.abs(bytes)
@@ -140,13 +146,15 @@ class OvertureWrapper(parser: ArgParser) {
             while(true) {
                 sleep(10000)
                 val mem = humanReadableByteCountBin(Runtime.getRuntime().totalMemory())
-                println("MEM: $mem")
+                logger.info("Memory reserved by Overture fork: $mem")
             }
         }
     }
 
     fun run() {
-        Monitor().start()
+        if (monitorMemory) {
+            Monitor(logLevel).start()
+        }
         val interpreter = loadSpecification()
         if (runTests) {
             if (dialect != Dialect.vdmsl) {
