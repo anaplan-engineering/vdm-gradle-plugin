@@ -25,15 +25,10 @@ import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.options.Option
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 import java.io.File
-import java.io.FileOutputStream
-import java.io.OutputStream
-import java.util.jar.Attributes
-import java.util.jar.JarOutputStream
-import java.util.jar.Manifest
 
 
 internal const val test = "test"
@@ -75,6 +70,9 @@ open class VdmTestRunTask() : OvertureTask() {
         @OutputDirectory
         get() = File(project.vdmBuildDir, "testLaunch")
 
+    private var testFilter: String = "Test.*"
+        @Option(option = "tests", description = "Filter the tests to be run")
+        set(value) { field = value }
 
     override fun exec() {
         if (dialect != Dialect.vdmsl) {
@@ -95,6 +93,7 @@ open class VdmTestRunTask() : OvertureTask() {
                     listOf(
                             "--log-level", project.gradle.startParameter.logLevel,
                             "--run-tests", true,
+                            "--test-filter", testFilter,
                             "--report-target-dir", reportDir.absolutePath,
                             "--launch-target-dir", launchDir.absolutePath,
                             "--test-launch-generation", testLaunchGeneration.name,

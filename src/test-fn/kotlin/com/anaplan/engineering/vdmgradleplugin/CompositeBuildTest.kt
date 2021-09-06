@@ -38,7 +38,7 @@ class CompositeBuildTest(
         @JvmStatic
         @Parameterized.Parameters(name = "{0}")
         fun example() = arrayOf(
-                test(testName = "compositeWithDependency")
+                test(testName = "compositeWithDependencyPassingTest")
         )
 
         private fun test(

@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'com.anaplan.engineering'
-version = '2.6.4.21'
+version = '2.6.4.22'
 
 apply plugin: 'kotlin'
 apply plugin: 'java-gradle-plugin'

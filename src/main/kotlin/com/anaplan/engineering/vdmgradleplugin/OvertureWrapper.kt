@@ -73,6 +73,8 @@ class OvertureWrapper(parser: ArgParser) {
         this.toBoolean()
     }.default(false)
 
+    private val testFilter by parser.storing("Test filter").default("Test.*")
+
     private val outputLib by parser.storing("Optional location of lib file") {
         File(this)
     }.default { null }
@@ -300,6 +302,7 @@ class OvertureWrapper(parser: ArgParser) {
     }
 
     private fun collectTests(interpreter: ModuleInterpreter): List<TestSuite> {
+        val filterRegex = Regex(testFilter)
         val testModules = interpreter.modules.filter { module ->
             module.files.all { testSourceDir == null || it.startsWith(testSourceDir!!) } &&
                     module.name.name.startsWith("Test")
@@ -307,7 +310,7 @@ class OvertureWrapper(parser: ArgParser) {
         return testModules.map { module ->
             val operationDefs = module.defs.filter { it is SOperationDefinition }.map { it as SOperationDefinition }
             // TODO - should check that operation has zero params
-            val testNames = operationDefs.filter { it.name.name.startsWith("Test") }.map { it.name.name }
+            val testNames = operationDefs.filter { filterRegex.matches(it.name.name) }.map { it.name.name }
             TestSuite(module.name.name, testNames)
         }
     }
