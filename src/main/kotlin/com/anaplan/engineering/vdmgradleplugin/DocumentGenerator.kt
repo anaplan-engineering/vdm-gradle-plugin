@@ -66,6 +66,7 @@ internal fun Project.addDocGenTask() {
 
 private val prettyPrinter = VdmPrettyPrinter(MathematicalUnicodeHtmlRenderStrategy(header = "", footer = ""))
 
+@CacheableTask
 open class DocGenTask : DefaultTask() {
 
     val dialect: Dialect

@@ -23,6 +23,7 @@ package com.anaplan.engineering.vdmgradleplugin
 
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import java.io.File
@@ -38,8 +39,10 @@ internal fun Project.addTypeCheckTasks() {
     }
 }
 
+@CacheableTask
 open class VdmTypeCheckMainTask() : VdmTypeCheckTask(false)
 
+@CacheableTask
 open class VdmTypeCheckTestTask() : VdmTypeCheckTask(true)
 
 open class VdmTypeCheckTask(private val includeTests: Boolean) : OvertureTask() {

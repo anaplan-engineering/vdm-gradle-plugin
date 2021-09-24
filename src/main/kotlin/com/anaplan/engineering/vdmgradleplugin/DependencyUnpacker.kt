@@ -30,6 +30,7 @@ import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.result.ComponentSelectionReasons
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
@@ -61,6 +62,7 @@ internal fun Project.addDependencyUnpackTask() {
     }
 }
 
+@CacheableTask
 open class DependencyUnpackTask : DefaultTask() {
 
     private val vdmConfiguration = project.configurations.getByName(vdmConfigurationName)
