@@ -23,10 +23,8 @@ package com.anaplan.engineering.vdmgradleplugin
 
 import org.gradle.api.GradleException
 import org.gradle.api.Project
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.*
+import org.gradle.api.tasks.PathSensitivity.*
 import org.gradle.api.tasks.options.Option
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 import java.io.File
@@ -58,6 +56,7 @@ open class VdmTestRunTask() : OvertureTask() {
 
     val generatedLibFile: File
         @InputFile
+        @PathSensitive(RELATIVE)
         get() = project.generatedLibFile
 
     val reportDir: File
