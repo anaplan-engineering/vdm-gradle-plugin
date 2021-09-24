@@ -62,7 +62,6 @@ internal fun Project.addDependencyUnpackTask() {
     }
 }
 
-@CacheableTask
 open class DependencyUnpackTask : DefaultTask() {
 
     private val vdmConfiguration = project.configurations.getByName(vdmConfigurationName)
