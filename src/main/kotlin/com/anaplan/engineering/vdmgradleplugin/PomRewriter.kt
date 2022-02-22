@@ -37,7 +37,7 @@ import javax.xml.xpath.XPathFactory
 
 class PomRewriter(val file: File) {
 
-    private fun readDocument(): Document {
+    internal fun readDocument(): Document {
         val fileInputStream = FileInputStream(file)
         val builder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
         return builder.parse(fileInputStream)

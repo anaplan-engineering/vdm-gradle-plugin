@@ -49,7 +49,10 @@ class PomRewriterTest {
         Files.copy(sourceFileOrig, sourceFileCopy)
         makeChanges(PomRewriter(sourceFileCopy.toFile()))
         val expectedFile = Paths.get(javaClass.getResource("$resourceSuffix-expected.xml").toURI())
-        Assert.assertEquals(expectedFile.toFile().readText(), sourceFileCopy.toFile().readText())
+        Assert.assertEquals(
+            PomRewriter(expectedFile.toFile()).readDocument().toString(),
+            PomRewriter(sourceFileCopy.toFile()).readDocument().toString()
+        )
     }
 
 
