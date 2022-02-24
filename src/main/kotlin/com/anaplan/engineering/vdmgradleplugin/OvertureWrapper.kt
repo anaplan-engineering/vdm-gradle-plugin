@@ -75,10 +75,6 @@ class OvertureWrapper(parser: ArgParser) {
 
     private val testFilter by parser.storing("Test filter").default("Test.*")
 
-    private val outputLib by parser.storing("Optional location of lib file") {
-        File(this)
-    }.default { null }
-
     private val dialect by parser.storing("The VDM dialect") {
         Dialect.valueOf(this)
     }.default(Dialect.vdmsl)
@@ -285,9 +281,6 @@ class OvertureWrapper(parser: ArgParser) {
     private fun loadSpecification(): ModuleInterpreter {
         // For coverage we need to reparse to correctly identify lex locations in files
         val controller = dialect.createController()
-        if (outputLib != null) {
-            controller.setOutfile(outputLib!!.absolutePath)
-        }
         val parseStatus = controller.parse(specificationFiles)
         if (parseStatus != ExitStatus.EXIT_OK) {
             exitProcess(ExitCodes.ParseFailed)

@@ -86,7 +86,6 @@ gradlePlugin {
     }
 }
 
-
 // Using artifactory plugin appears broken -- https://github.com/gradle/gradle/issues/4783
 publishing {
     repositories {

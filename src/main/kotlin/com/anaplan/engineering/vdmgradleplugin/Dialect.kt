@@ -49,7 +49,7 @@ interface GradleVdm {
 open class GradleVdmSl : VDMSL(), GradleVdm {
 
     override fun setOutfile(outfile : String) {
-        VDMJ.outfile = outfile
+        VDMJ.outfile = null
     }
 
 }
@@ -57,7 +57,7 @@ open class GradleVdmSl : VDMSL(), GradleVdm {
 open class GradleVdmPp : VDMPP(), GradleVdm {
 
     override fun setOutfile(outfile : String) {
-        VDMJ.outfile = outfile
+        VDMJ.outfile = null
     }
 
 }
@@ -65,7 +65,7 @@ open class GradleVdmPp : VDMPP(), GradleVdm {
 open class GradleVdmRt : VDMRT(), GradleVdm {
 
     override fun setOutfile(outfile : String) {
-        VDMJ.outfile = outfile
+        VDMJ.outfile = null
     }
 
 }

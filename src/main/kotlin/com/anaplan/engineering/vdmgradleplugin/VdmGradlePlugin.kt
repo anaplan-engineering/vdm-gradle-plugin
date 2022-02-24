@@ -94,9 +94,6 @@ internal val Project.vdmTestDependencyDir
 internal val Project.vdmLibDependencyDir
     get() = File(vdmBuildDir, "lib-dependencies")
 
-internal val Project.generatedLibFile
-    get() = File(vdmBuildDir, "generated.lib")
-
 internal val Project.vdmPackageFile: File
     get() = File(buildDir, "libs/$name-$version.zip")
 
@@ -174,6 +171,7 @@ internal fun deleteDirectory(directory: File) {
     Files.walkFileTree(directory.toPath(), fileVisitor)
 }
 
+// TODO: we won't need this now
 internal fun Project.loadBinarySpecification(binary: File, vararg otherFiles: File): Interpreter {
     val dialect = project.vdmConfig.dialect
     val controller = dialect.createController()

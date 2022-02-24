@@ -50,11 +50,6 @@ open class VdmTypeCheckTask(private val includeTests: Boolean) : OvertureTask() 
         @InputFiles
         get() = project.locateAllSpecifications(dialect, includeTests)
 
-    val generatedLibFile: File
-        @OutputFile
-        get() = project.generatedLibFile
-
-
     override fun exec() {
         logger.info("VDM dialect: $dialect")
         jvmArgs = project.vdmConfig.overtureJvmArgs
@@ -68,7 +63,6 @@ open class VdmTypeCheckTask(private val includeTests: Boolean) : OvertureTask() 
                     "--dialect", dialect.name,
                     "--log-level", project.gradle.startParameter.logLevel,
                     "--run-tests", false,
-                    "--output-lib", generatedLibFile.absolutePath,
                     "--monitor-memory", project.vdmConfig.monitorOvertureMemory
             ) + specificationFiles.map { it.absolutePath }
 

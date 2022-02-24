@@ -54,11 +54,6 @@ open class VdmTestRunTask() : OvertureTask() {
         @Input
         get() = project.vdmConfig.testLaunchGeneration
 
-    val generatedLibFile: File
-        @InputFile
-        @PathSensitive(RELATIVE)
-        get() = project.generatedLibFile
-
     val reportDir: File
         @OutputDirectory
         get() = File(project.vdmBuildDir, "junitreports")
