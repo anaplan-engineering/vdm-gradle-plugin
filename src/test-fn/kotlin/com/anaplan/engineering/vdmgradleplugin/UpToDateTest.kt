@@ -1287,7 +1287,7 @@ class generateLaunchGenForAllTestUpToDateTest {
 
     private fun createProject(
             moduleName: String = "A",
-            valueName: String = moduleName.toLowerCase(),
+            valueName: String = moduleName.lowercase(),
             config: String = useVdmPlugin,
             createMainModule: Boolean = true,
             createTestModule: Boolean = false,
