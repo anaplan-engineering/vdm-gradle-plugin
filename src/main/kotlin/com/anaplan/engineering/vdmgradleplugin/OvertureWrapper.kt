@@ -252,9 +252,9 @@ class OvertureWrapper(parser: ArgParser) {
 
     private fun logTestResults(testResults: List<TestSuiteResult>) {
         if (testResults.all { it.succeeded }) {
-            logger.info("SUCCESS -- ${testResults.sumBy { it.testCount }} tests passed")
+            logger.info("SUCCESS -- ${testResults.sumOf { it.testCount }} tests passed")
         } else {
-            logger.info("FAILURE -- ${testResults.sumBy { it.failCount }} tests failed, ${testResults.sumBy { it.errorCount }} tests had errors [${testResults.sumBy { it.testCount }} tests were run]")
+            logger.info("FAILURE -- ${testResults.sumOf { it.failCount }} tests failed, ${testResults.sumOf { it.errorCount }} tests had errors [${testResults.sumOf { it.testCount }} tests were run]")
         }
     }
 
@@ -377,20 +377,11 @@ private data class TestSuiteResult(
         testResults.size
     }
     val duration: Long by lazy {
-        testResults.sumByLong { it.duration }
+        testResults.sumOf { it.duration }
     }
     val succeeded: Boolean by lazy {
         testResults.all { it.state == TestResultState.PASS }
     }
-}
-
-// copies _Collections.sumBy for long
-private inline fun <T> Iterable<T>.sumByLong(selector: (T) -> Long): Long {
-    var sum: Long = 0
-    for (element in this) {
-        sum += selector(element)
-    }
-    return sum
 }
 
 private enum class ExpectedTestResult(val description: String) {

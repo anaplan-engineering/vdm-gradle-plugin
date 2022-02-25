@@ -35,9 +35,9 @@ internal class CoverageRecorder(
 
     internal fun recordCoverage(interpreter: ModuleInterpreter) {
         val coverageByFile = generateCoverage(interpreter)
-        val totalLocations = coverageByFile.sumBy { it.coverage.size }
+        val totalLocations = coverageByFile.sumOf { it.coverage.size }
         if (totalLocations > 0) {
-            val coveredLocations = coverageByFile.sumBy { it.coverage.filter { (_, v) -> v > 0L }.count() }
+            val coveredLocations = coverageByFile.sumOf { it.coverage.filter { (_, v) -> v > 0L }.count() }
             val coverage = if (totalLocations == 0) 100.0 else 100.0 * coveredLocations / totalLocations
             logger.info("COVERAGE -- %2.2f%%".format(coverage))
 

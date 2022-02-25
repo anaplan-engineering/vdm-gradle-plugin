@@ -213,7 +213,7 @@ open class DocGenTask : DefaultTask() {
 
     private fun addMetadata(title: String, bodyText: String, relativeCssFile: File) =
             buildString {
-                appendln("<!DOCTYPE html>")
+                appendLine("<!DOCTYPE html>")
                 appendHTML(xhtmlCompatible = true).html {
                     attributes["data-theme"] = "vdm"
                     head {
