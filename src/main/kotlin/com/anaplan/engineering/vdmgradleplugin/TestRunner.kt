@@ -21,10 +21,11 @@
  */
 package com.anaplan.engineering.vdmgradleplugin
 
-import org.gradle.api.GradleException
 import org.gradle.api.Project
-import org.gradle.api.tasks.*
-import org.gradle.api.tasks.PathSensitivity.*
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskInstantiationException
 import org.gradle.api.tasks.options.Option
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 import java.io.File
@@ -35,10 +36,10 @@ internal const val test = "test"
 internal fun Project.addTestTask() {
     createVdmTask(test, VdmTestRunTask::class.java)
     afterEvaluate {
-        val testTask = tasks.getByName(test) ?: throw GradleException("Cannot find VDM test task")
+        val testTask = tasks.getByName(test) ?: throw TaskInstantiationException("Cannot find VDM test task")
         testTask.dependsOn(typeCheckTests)
         val checkTask = tasks.getByName(LifecycleBasePlugin.CHECK_TASK_NAME)
-                ?: throw GradleException("Cannot find check task")
+                ?: throw TaskInstantiationException("Cannot find check task")
         checkTask.dependsOn(test)
     }
 }
@@ -72,7 +73,8 @@ open class VdmTestRunTask() : OvertureTask() {
 
     override fun exec() {
         if (dialect != Dialect.vdmsl) {
-            throw GradleException("Test running only defined for VDM-SL currently")
+            // Would prefer to throw TaskExecutionException, but it requires a task as argument
+            throw IllegalStateException("Test running only defined for VDM-SL currently")
         }
         jvmArgs = project.vdmConfig.overtureJvmArgs
         super.setArgs(constructArgs())

@@ -22,10 +22,9 @@
 package com.anaplan.engineering.vdmgradleplugin
 
 import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
-import org.gradle.language.base.plugins.LifecycleBasePlugin
+import org.gradle.api.tasks.TaskInstantiationException
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
@@ -37,7 +36,7 @@ const val cleanLibs = "cleanLibs"
 internal fun Project.addCleanLibsTask() {
     createVdmTask(cleanLibs, CleanLibTask::class.java)
     afterEvaluate {
-        val cleanTask = tasks.getByName("clean") ?: throw GradleException("Cannot find clean task")
+        val cleanTask = tasks.getByName("clean") ?: throw TaskInstantiationException("Cannot find clean task")
         cleanTask.dependsOn(cleanLibs)
     }
 }

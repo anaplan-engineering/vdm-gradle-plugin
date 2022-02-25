@@ -21,7 +21,6 @@
  */
 package com.anaplan.engineering.vdmgradleplugin
 
-import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -32,7 +31,6 @@ import java.io.IOException
 import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.*
-import kotlin.collections.ArrayList
 
 class VdmGradlePlugin : Plugin<Project> {
 
@@ -177,13 +175,16 @@ internal fun Project.loadSpecification(typeCheck: Boolean = false): Interpreter 
     val specificationFiles = project.locateAllSpecifications(dialect, true).map { File(it.absolutePath) }
     val parseStatus = controller.parse(specificationFiles)
     if (parseStatus != ExitStatus.EXIT_OK) {
-        throw GradleException("VDM specification cannot be parsed")
+        throw VdmParseException("VDM specification cannot be parsed")
     }
     if (typeCheck) {
         val typeCheckStatus = controller.typeCheck()
         if (typeCheckStatus != ExitStatus.EXIT_OK) {
-            throw GradleException("VDM specification does not type check")
+            throw VdmTypeCheckException("VDM specification does not type check")
         }
     }
     return controller.getInterpreter()
 }
+
+class VdmParseException(msg: String? = null) : Exception(msg)
+class VdmTypeCheckException(msg: String? = null) : Exception(msg)

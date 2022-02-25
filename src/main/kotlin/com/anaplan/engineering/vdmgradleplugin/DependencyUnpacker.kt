@@ -22,22 +22,20 @@
 package com.anaplan.engineering.vdmgradleplugin
 
 import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.UnknownProjectException
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.result.ComponentSelectionReasons
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 import java.io.File
 import java.nio.file.Files
 import java.time.LocalDateTime
+import kotlin.IllegalStateException
 
 const val dependencyUnpack = "dependencyUnpack"
 
@@ -49,14 +47,14 @@ internal fun Project.addDependencyUnpackTask() {
             val plugins = it.dependencyProject.plugins
             if (plugins.findPlugin("vdm") != null) {
                 val dependencyTask = it.dependencyProject.tasks.getByName(dependencyUnpack)
-                        ?: throw GradleException("Cannot find unpack task in project dependency")
+                        ?: throw TaskInstantiationException("Cannot find unpack task in project dependency")
                 localTask.dependsOn(dependencyTask)
             } else if (plugins.findPlugin("java") != null) {
                 val assembleTask = it.dependencyProject.tasks.getByName(LifecycleBasePlugin.ASSEMBLE_TASK_NAME)
-                        ?: throw GradleException("Cannot find unpack task in project dependency")
+                        ?: throw TaskInstantiationException("Cannot find unpack task in project dependency")
                 localTask.dependsOn(assembleTask)
             } else {
-                throw GradleException("Don't know what to do with project $it")
+                throw IllegalStateException("Don't know what to do with project $it")
             }
         }
     }
@@ -142,7 +140,7 @@ open class DependencyUnpackTask : DefaultTask() {
             val reasons = component.selectionReason.descriptions
             when {
                 ComponentSelectionReasons.COMPOSITE_BUILD in reasons -> {
-                    throw GradleException("Composite builds requiring substitution are not supported")
+                    throw IllegalStateException("Composite builds requiring substitution are not supported")
                 }
                 ComponentSelectionReasons.REQUESTED in reasons -> {
                     logger.info("Unpacking artifacts for requested component: ${component.id}")
@@ -158,7 +156,7 @@ open class DependencyUnpackTask : DefaultTask() {
                             val projectId = component.id as ProjectComponentIdentifier
                             logger.info("Link to project: $projectId")
                             val dependency = project.findProject(projectId.projectPath)
-                                    ?: throw GradleException("References unlocatable dependency $projectId")
+                                    ?: throw UnknownProjectException("References unlocatable dependency $projectId")
 
 
                             val plugins = dependency.plugins
@@ -244,14 +242,14 @@ open class DependencyUnpackTask : DefaultTask() {
                                     installLib(it, vdmLibDependencyDir)
                                 }
                             } else {
-                                throw GradleException("Don't know what to do with project $projectId")
+                                throw IllegalStateException("Don't know what to do with project $projectId")
                             }
                         }
                     }
                 }
                 ComponentSelectionReasons.ROOT in reasons -> {
                 }
-                else -> throw GradleException("Unsupported dependency on ${component.id} reasons $reasons")
+                else -> throw IllegalStateException("Unsupported dependency on ${component.id} reasons $reasons")
             }
         }
     }

@@ -68,7 +68,7 @@ task functionalTest(type: Test) {
     group = LifecycleBasePlugin.VERIFICATION_GROUP
     testClassesDirs = sourceSets.functionalTest.output.classesDirs
     classpath = sourceSets.functionalTest.runtimeClasspath
-    systemProperty "functionalTestClasspathJar", functionalTestClasspathJar.archiveFilePath.absolutePath
+    systemProperty "functionalTestClasspathJar", functionalTestClasspathJar.archivePath.absolutePath
     outputs.upToDateWhen { false }
     mustRunAfter test
     dependsOn functionalTestClasspathJar

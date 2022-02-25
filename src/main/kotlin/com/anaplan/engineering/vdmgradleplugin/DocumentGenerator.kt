@@ -37,7 +37,6 @@ import org.commonmark.renderer.html.AttributeProvider
 import org.commonmark.renderer.html.HtmlNodeRendererContext
 import org.commonmark.renderer.html.HtmlRenderer
 import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.*
@@ -131,7 +130,7 @@ open class DocGenTask : DefaultTask() {
         }
         val interpreter = project.loadSpecification() as? ModuleInterpreter
                 ?: // this should never happen as we have limited dialect to VDM-SL
-                throw GradleException("Interpreter is not a container interpreter!")
+                throw IllegalStateException("Interpreter is not a container interpreter!")
 
         val sharedFiles = SharedFiles(
                 cssFile = createCssFile(),
@@ -464,7 +463,7 @@ private class VdmDelimiterProcessor : DelimiterProcessor {
                 vdmNode.appendChild(tmp)
             } else {
                 // TODO - make this more useful
-                throw GradleException("Vdm reference must be single reference")
+                throw IllegalStateException("Vdm reference must be single reference")
             }
             tmp = tmp.next
         }
