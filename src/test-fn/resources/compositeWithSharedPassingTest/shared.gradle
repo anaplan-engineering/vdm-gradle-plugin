@@ -1,7 +1,0 @@
-buildscript {
-    dependencies {
-        classpath files("%functionalTestClasspath.jar%")
-    }
-}
-
-apply plugin: com.anaplan.engineering.vdmgradleplugin.VdmGradlePlugin
