@@ -143,7 +143,7 @@ internal fun locateFilesWithExtension(directory: File, vararg extensions: String
     return files.map { it.toFile() }
 }
 
-internal val isWindows = System.getProperty("os.name").toLowerCase().contains("windows")
+internal val isWindows = System.getProperty("os.name").contains("windows", ignoreCase = true)
 
 internal fun deleteDirectory(directory: File) {
     if (!directory.exists()) {
@@ -171,14 +171,19 @@ internal fun deleteDirectory(directory: File) {
     Files.walkFileTree(directory.toPath(), fileVisitor)
 }
 
-// TODO: we won't need this now
-internal fun Project.loadBinarySpecification(binary: File, vararg otherFiles: File): Interpreter {
+internal fun Project.loadSpecification(typeCheck: Boolean = false): Interpreter {
     val dialect = project.vdmConfig.dialect
     val controller = dialect.createController()
-    val parseStatus = controller.parse(listOf(binary) + otherFiles)
+    val specificationFiles = project.locateAllSpecifications(dialect, true).map { File(it.absolutePath) }
+    val parseStatus = controller.parse(specificationFiles)
     if (parseStatus != ExitStatus.EXIT_OK) {
-        throw GradleException("VDM parse of generated lib failed")
+        throw GradleException("VDM specification cannot be parsed")
+    }
+    if (typeCheck) {
+        val typeCheckStatus = controller.typeCheck()
+        if (typeCheckStatus != ExitStatus.EXIT_OK) {
+            throw GradleException("VDM specification does not type check")
+        }
     }
     return controller.getInterpreter()
 }
-

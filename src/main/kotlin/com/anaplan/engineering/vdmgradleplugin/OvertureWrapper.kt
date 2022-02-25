@@ -265,19 +265,6 @@ class OvertureWrapper(parser: ArgParser) {
         val TypeCheckFailed = 4
     }
 
-    /*
-        Various strategies have been attempted here to make use of binaries and to split out the parse phase from the type
-        check phase, but Overture doesn't really help.
-
-        We should look to implement the following in Overture and then revisit:
-        - produce non-type checked binary format (for parse phase)
-        - do not include loaded libs when writing out binary (otherwise we have transitive issues) so that we can:
-            * store main and test in separate libs
-            * publish and depend upon libs
-
-         If we try and create a binary for the main and then load that in test we get false warnings of duplicate declarations.
-         These become very distracting and obfuscate real issues, so we have reverted to starting from scratch in each task.
-    */
     private fun loadSpecification(): ModuleInterpreter {
         // For coverage we need to reparse to correctly identify lex locations in files
         val controller = dialect.createController()
@@ -414,18 +401,13 @@ private enum class ExpectedTestResult(val description: String) {
 }
 
 // ideally this would be done through an annotation, but this is not feasible currently
-private fun getExpectedResult(testName: String): ExpectedTestResult {
-    val testNameLower = testName.toLowerCase()
-    return if (testNameLower.toLowerCase().contains("expectpreconditionfailure")) {
-        ExpectedTestResult.failedPrecondition
-    } else if (testNameLower.contains("expectpostconditionfailure")) {
-        ExpectedTestResult.failedPostcondition
-    } else if (testNameLower.contains("expectinvariantfailure")) {
-        ExpectedTestResult.failedInvariant
-    } else {
-        ExpectedTestResult.success
+private fun getExpectedResult(testName: String): ExpectedTestResult =
+    when {
+        testName.contains("expectpreconditionfailure", ignoreCase = true) -> ExpectedTestResult.failedPrecondition
+        testName.contains("expectpostconditionfailure", ignoreCase = true) -> ExpectedTestResult.failedPostcondition
+        testName.contains("expectinvariantfailure", ignoreCase = true) -> ExpectedTestResult.failedInvariant
+        else -> ExpectedTestResult.success
     }
-}
 
 private val preconditionFailureCodes = setOf(4055, 4071)
 private val postconditionFailureCodes = setOf(4056, 4072)

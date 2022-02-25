@@ -129,9 +129,7 @@ open class DocGenTask : DefaultTask() {
             logger.info("Skipping as doc generation only defined for VDM-SL currently")
             return
         }
-        val generatedLibFile = null
-        // TODO: fix this
-        val interpreter = project.loadBinarySpecification(File("")) as? ModuleInterpreter
+        val interpreter = project.loadSpecification() as? ModuleInterpreter
                 ?: // this should never happen as we have limited dialect to VDM-SL
                 throw GradleException("Interpreter is not a container interpreter!")
 

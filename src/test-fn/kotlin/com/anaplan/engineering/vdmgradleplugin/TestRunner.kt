@@ -72,6 +72,7 @@ object TestRunner {
                 .withArguments(*cleanTasks, *tasks, "--info", "--stacktrace")
                 .forwardStdOutput(File(projectDir, "out.log").printWriter())
                 .forwardStdError(File(projectDir, "err.log").printWriter())
+                .withDebug(true)
         return if (fail) {
             runner.buildAndFail()
         } else {
