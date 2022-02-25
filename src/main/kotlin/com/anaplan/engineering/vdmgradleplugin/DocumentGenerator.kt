@@ -72,6 +72,11 @@ open class DocGenTask : DefaultTask() {
         @Input
         get() = project.vdmConfig.dialect
 
+    val specificationFiles: List<File>
+        @PathSensitive(PathSensitivity.RELATIVE)
+        @InputFiles
+        get() = project.locateAllSpecifications(dialect, true).map { File(it.absolutePath) }
+
     val vdmGenDocsDir: File
         @OutputDirectory
         get() = project.vdmGenDocsDir
@@ -128,7 +133,7 @@ open class DocGenTask : DefaultTask() {
             logger.info("Skipping as doc generation only defined for VDM-SL currently")
             return
         }
-        val interpreter = project.loadSpecification() as? ModuleInterpreter
+        val interpreter = project.loadSpecification(specificationFiles) as? ModuleInterpreter
                 ?: // this should never happen as we have limited dialect to VDM-SL
                 throw IllegalStateException("Interpreter is not a container interpreter!")
 

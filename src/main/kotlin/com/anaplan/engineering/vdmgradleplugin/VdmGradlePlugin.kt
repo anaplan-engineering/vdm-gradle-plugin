@@ -169,10 +169,9 @@ internal fun deleteDirectory(directory: File) {
     Files.walkFileTree(directory.toPath(), fileVisitor)
 }
 
-internal fun Project.loadSpecification(typeCheck: Boolean = false): Interpreter {
+internal fun Project.loadSpecification(specificationFiles: List<File>, typeCheck: Boolean = false): Interpreter {
     val dialect = project.vdmConfig.dialect
     val controller = dialect.createController()
-    val specificationFiles = project.locateAllSpecifications(dialect, true).map { File(it.absolutePath) }
     val parseStatus = controller.parse(specificationFiles)
     if (parseStatus != ExitStatus.EXIT_OK) {
         throw VdmParseException("VDM specification cannot be parsed")
