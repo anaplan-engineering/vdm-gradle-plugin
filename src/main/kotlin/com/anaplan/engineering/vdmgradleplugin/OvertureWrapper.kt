@@ -113,6 +113,10 @@ class OvertureWrapper(parser: ArgParser) {
         this.toBoolean()
     }.default(false)
 
+    private val statusFile by parser.storing("Directory to write generated test launch files") {
+        File(this)
+    }.default { null }
+
     private val logger = Logger(logLevel)
 
     private class Monitor(private val logLevel: GradleLogLevel) : Thread() {
@@ -269,10 +273,13 @@ class OvertureWrapper(parser: ArgParser) {
         // For coverage we need to reparse to correctly identify lex locations in files
         val controller = dialect.createController()
         val parseStatus = controller.parse(specificationFiles)
+        writeStatus(parseStatus)
         if (parseStatus != ExitStatus.EXIT_OK) {
             exitProcess(ExitCodes.ParseFailed)
         }
         val typeCheckStatus = controller.typeCheck()
+        // Overwriting the status file is equivalent to the short-circuiting of parseStatus && typeCheckStatus
+        writeStatus(typeCheckStatus)
         if (typeCheckStatus != ExitStatus.EXIT_OK) {
             exitProcess(ExitCodes.TypeCheckFailed)
         }
@@ -280,6 +287,14 @@ class OvertureWrapper(parser: ArgParser) {
         // this should never happen as we have limited dialect to VDM-SL
                 ?: exitProcess(ExitCodes.UnexpectedDialect)
     }
+
+    private fun writeStatus(exitStatus: ExitStatus) = statusFile?.writeText(
+        when (exitStatus) {
+            ExitStatus.EXIT_OK -> "Success"
+            ExitStatus.EXIT_ERRORS -> "Failure"
+            ExitStatus.RELOAD -> "Reload"
+        }
+    )
 
     private fun collectTests(interpreter: ModuleInterpreter): List<TestSuite> {
         val filterRegex = Regex(testFilter)

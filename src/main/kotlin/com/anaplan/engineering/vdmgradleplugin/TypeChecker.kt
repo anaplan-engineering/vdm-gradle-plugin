@@ -50,6 +50,11 @@ open class VdmTypeCheckTask(private val includeTests: Boolean) : OvertureTask() 
         @InputFiles
         get() = project.locateAllSpecifications(dialect, includeTests)
 
+    // Only needed to ensure caching of the Gradle task
+    val statusFile: File
+        @OutputFile
+        get() = File(project.vdmBuildDir, "typeCheckStatus.log")
+
     override fun exec() {
         logger.info("VDM dialect: $dialect")
         jvmArgs = project.vdmConfig.overtureJvmArgs
@@ -62,6 +67,7 @@ open class VdmTypeCheckTask(private val includeTests: Boolean) : OvertureTask() 
             listOf(
                     "--dialect", dialect.name,
                     "--log-level", project.gradle.startParameter.logLevel,
+                    "--status-file", statusFile,
                     "--run-tests", false,
                     "--monitor-memory", project.vdmConfig.monitorOvertureMemory
             ) + specificationFiles.map { it.absolutePath }
