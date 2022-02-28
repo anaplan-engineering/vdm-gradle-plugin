@@ -57,10 +57,14 @@ open class VdmTypeCheckTask(private val includeTests: Boolean) : OvertureTask() 
 
     override fun exec() {
         logger.info("VDM dialect: $dialect")
-        jvmArgs = project.vdmConfig.overtureJvmArgs
-        super.setArgs(constructArgs())
-        super.setClasspath(project.files(createClassPathJar()))
-        super.exec()
+        if (specificationFiles.isEmpty) {
+            logger.info("Skipping type check because no files were found for dialect $dialect")
+        } else {
+            jvmArgs = project.vdmConfig.overtureJvmArgs
+            super.setArgs(constructArgs())
+            super.setClasspath(project.files(createClassPathJar()))
+            super.exec()
+        }
     }
 
     private fun constructArgs() =

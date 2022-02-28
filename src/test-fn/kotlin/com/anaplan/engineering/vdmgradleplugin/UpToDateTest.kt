@@ -742,6 +742,16 @@ class generateLaunchGenForAllTestUpToDateTest {
     }
 
     @Test
+    fun test_noFiles() {
+        val project = createProject(createTestModule = false)
+        runAndCheck(project, Task.test, mapOf(
+            Task.dependencyUnpack to TaskOutcome.SUCCESS,
+            Task.typeCheckTests to TaskOutcome.SUCCESS,
+            Task.test to TaskOutcome.SUCCESS
+        ))
+    }
+
+    @Test
     fun docGen_firstSucceedsSecondUpToDate() {
         val project = createProject(createTestModule = true, createMarkdown = true)
         runAndCheck(project, Task.docGen, mapOf(

@@ -1,4 +1,4 @@
-module TestTest
+module TestTestB
 imports
   from MainA
     values
@@ -20,6 +20,4 @@ operations
   TestAdd() == Add(MainA`x,MainB`y)
   post RESULT = 2;
 
-end TestTest
-
-
+end TestTestB
