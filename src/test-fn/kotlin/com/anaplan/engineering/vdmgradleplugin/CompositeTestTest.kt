@@ -39,7 +39,6 @@ class CompositeTestTest(
         @Parameterized.Parameters(name = "{0}")
         fun example() = arrayOf(
                 test(testName = "compositePassingTest"),
-                test(testName = "compositeWithSharedPassingTest"),
                 // We have been unable to get the information needed to enable composite substitution
                 test(testName = "compositeWithDependencyPassingTest", expectSuccess = false)
         )
@@ -52,7 +51,7 @@ class CompositeTestTest(
 
     @Test
     fun compositeTestTest() {
-        val dir = File(javaClass.getResource("/$testName").toURI())
+        val dir = File(javaClass.getResource("/$testName")!!.toURI())
         executeCompositeBuild(
                 projectDir = dir,
                 tasks = arrayOf("test"),
