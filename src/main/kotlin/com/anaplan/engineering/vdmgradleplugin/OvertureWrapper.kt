@@ -161,9 +161,9 @@ class OvertureWrapper(parser: ArgParser) {
         if (runTests) {
             if (dialect != Dialect.vdmsl) {
                 logger.error("Test running only defined for VDM-SL currently")
-                exitProcess(1)
+                exitProcess(ExitCodes.UnexpectedDialect)
             }
-            runTests(interpreter)
+            runTests(interpreter as ModuleInterpreter)
         }
     }
 
@@ -269,7 +269,7 @@ class OvertureWrapper(parser: ArgParser) {
         val TypeCheckFailed = 4
     }
 
-    private fun loadSpecification(): ModuleInterpreter {
+    private fun loadSpecification(): Interpreter {
         // For coverage we need to reparse to correctly identify lex locations in files
         val controller = dialect.createController()
         val parseStatus = controller.parse(specificationFiles)
@@ -283,9 +283,7 @@ class OvertureWrapper(parser: ArgParser) {
         if (typeCheckStatus != ExitStatus.EXIT_OK) {
             exitProcess(ExitCodes.TypeCheckFailed)
         }
-        return controller.getInterpreter() as? ModuleInterpreter
-        // this should never happen as we have limited dialect to VDM-SL
-                ?: exitProcess(ExitCodes.UnexpectedDialect)
+        return controller.getInterpreter()
     }
 
     private fun writeStatus(exitStatus: ExitStatus) = statusFile?.writeText(
