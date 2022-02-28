@@ -5,11 +5,11 @@ apply plugin: 'maven-publish'
 apply plugin: 'java'
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
-    compileOnly group: 'org.overturetool.core', name: 'interpreter', version: '2.6.4'
+    compileOnly group: 'org.overturetool.core', name: 'interpreter', version: '3.0.2'
 }
 
 publishing {
