@@ -75,7 +75,6 @@ open class VdmTestRunTask() : OvertureTask() {
 
     override fun exec() {
         if (dialect != Dialect.vdmsl) {
-            // Would prefer to throw TaskExecutionException, but it requires a task as argument
             throw IllegalStateException("Test running only defined for VDM-SL currently")
         }
         jvmArgs = project.vdmConfig.overtureJvmArgs

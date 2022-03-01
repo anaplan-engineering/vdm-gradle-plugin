@@ -37,8 +37,6 @@ enum class Dialect(val fileExtension : String, val createController : () -> Grad
 }
 
 interface GradleVdm {
-    fun setOutfile(outfile : String)
-
     fun parse(files: List<File>): ExitStatus
 
     fun typeCheck(): ExitStatus
@@ -46,26 +44,6 @@ interface GradleVdm {
     fun getInterpreter(): Interpreter
 }
 
-open class GradleVdmSl : VDMSL(), GradleVdm {
-
-    override fun setOutfile(outfile : String) {
-        VDMJ.outfile = null
-    }
-
-}
-
-open class GradleVdmPp : VDMPP(), GradleVdm {
-
-    override fun setOutfile(outfile : String) {
-        VDMJ.outfile = null
-    }
-
-}
-
-open class GradleVdmRt : VDMRT(), GradleVdm {
-
-    override fun setOutfile(outfile : String) {
-        VDMJ.outfile = null
-    }
-
-}
+open class GradleVdmSl : VDMSL(), GradleVdm
+open class GradleVdmPp : VDMPP(), GradleVdm
+open class GradleVdmRt : VDMRT(), GradleVdm

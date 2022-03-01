@@ -26,11 +26,8 @@ import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import org.overture.interpreter.VDMSL
 import org.overture.interpreter.util.ModuleListInterpreter
 import java.io.File
-
-import org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
 @RunWith(Parameterized::class)
 class TypeCheckTest(

@@ -15,7 +15,6 @@ ext {
 
 repositories {
     mavenCentral()
-    mavenLocal()
 }
 
 sourceSets {
@@ -46,7 +45,7 @@ dependencies {
     implementation gradleApi()
     implementation group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlinVersion
     implementation group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: kotlinVersion
-    implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-html-jvm', version: '0.7.2'
+    implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-html-jvm', version: '0.7.3'
 
     implementation group: 'org.overturetool.core', name: 'interpreter', version: overtureVersion
     implementation group: 'org.overturetool.core', name: 'annotations', version: overtureVersion

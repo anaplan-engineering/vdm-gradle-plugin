@@ -113,7 +113,7 @@ class OvertureWrapper(parser: ArgParser) {
         this.toBoolean()
     }.default(false)
 
-    private val statusFile by parser.storing("Directory to write generated test launch files") {
+    private val statusFile by parser.storing("File to log the result of the current task to") {
         File(this)
     }.default { null }
 
