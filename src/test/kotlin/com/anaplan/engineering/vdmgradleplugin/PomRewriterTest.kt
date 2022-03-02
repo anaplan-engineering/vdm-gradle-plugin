@@ -30,16 +30,20 @@ class PomRewriterTest {
 
     @Test
     fun addDependencies_noExistingDependencies() = check("pom-no-dependencies") { pomRewriter ->
-        pomRewriter.addDependencies(listOf(
+        pomRewriter.addDependencies(
+            listOf(
                 PomRewriter.Dependency("group", "artifact", "1.0.0", null, "zip", "compile")
-        ))
+            )
+        )
     }
 
     @Test
     fun addDependencies_withExistingDependencies() = check("pom-with-dependencies") { pomRewriter ->
-        pomRewriter.addDependencies(listOf(
+        pomRewriter.addDependencies(
+            listOf(
                 PomRewriter.Dependency("group2", "artifact2", "2.0.0", null, "zip", "compile")
-        ))
+            )
+        )
     }
 
     private fun check(resourceSuffix: String, makeChanges: (PomRewriter) -> Unit) {
