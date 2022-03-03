@@ -48,7 +48,7 @@ dependencies {
     implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-html-jvm', version: '0.7.3'
 
     implementation group: 'org.overturetool.core', name: 'interpreter', version: overtureVersion
-    implementation group: 'org.overturetool.core', name: 'annotations', version: overtureVersion
+    implementation group: 'org.overturetool.core.annotations', name: 'provided', version: overtureVersion
 
     implementation group: 'com.anaplan.engineering', name: 'vdm-pretty-printer', version: overtureVersion
 
