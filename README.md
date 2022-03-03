@@ -33,9 +33,9 @@ Additionally, the plugin provides the capability to combine specifications with 
 More details regarding the motivations for the plugin are provided in [this paper](doc/fraser-integratedVdmSlIntoCdPipelines-final.pdf).
 
 ## Version
-This page was last updated, to correctly describe the use and behaviour of version **2.6.4** of the plug-in.
+This page was last updated, to correctly describe the use and behaviour of version **3.0.2** of the plug-in.
 
-Version numbers are currently tied to the version of Overture that is used by the plugin. However, it is possible for a consumer to choose to use a different version of Overture. This is done, by exlucing the version of Overture included by the plugin and then adding an explicit dependency on the required version. For example, to use 2.6.2 of Overture with version 2.6.4 of the plugin, you would include the plugin as follows:
+Version numbers are currently tied to the version of Overture that is used by the plugin. However, it is possible for a consumer to choose to use a different version of Overture. This is done, by excluding the version of Overture included by the plugin and then adding an explicit dependency on the required version. For example, to use 3.0.0 of Overture with version 3.0.2 of the plugin, you would include the plugin as follows:
 
 ```groovy
 buildscript {
@@ -43,10 +43,11 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath (group: 'com.anaplan.engineering', name: 'vdm-gradle-plugin', version: '2.6.4') {
+    classpath (group: 'com.anaplan.engineering', name: 'vdm-gradle-plugin', version: '3.0.2') {
       exclude group: 'org.overturetool.core'
     }
-    classpath group: 'org.overturetool.core', name: 'interpreter', version: '2.6.2'
+    classpath group: 'org.overturetool.core', name: 'interpreter', version: '3.0.0'
+    classpath group: 'org.overturetool.core.annotations', name: 'provided', version: '3.0.0'
   }
 }
 ```
@@ -66,24 +67,25 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath group: 'com.anaplan.engineering', name: 'vdm-gradle-plugin', version: '2.6.4'
+    classpath group: 'com.anaplan.engineering', name: 'vdm-gradle-plugin', version: '3.0.2'
   }
 }
  
 apply plugin: 'vdm'
 ```
+The plugin will automatically pick up any annotation classes that have been added to the classpath dependencies.
 
-The plugins tasks are then invoked as they would be for any other Gradle build, for example:
+The tasks of the plugin are then invoked as they would be for any other Gradle build, for example:
 ```bash
 gradle clean build
 ``` 
 
-The tasks that the plugin makes available are describe in [tasks](#tasks) below.
+The tasks that the plugin makes available are described in [tasks](#tasks) below.
 
 The behaviour of the plugin can be customized by adding additional configuration to the `build.gradle` file. The options available are described in [configuration](#configuration) below. 
 
 ### Publishing artifacts
-It is trivial to instruct Gradle to publish the specification to a Maven-formatted artifact repository using the maven-publish plugin. The vdm-gradle-plugin will automatically mark artifacts`—according to the [configuration](#configuration)`—for publish when the maven-publish plugin has been applied to the project. 
+It is trivial to instruct Gradle to publish the specification to a Maven-formatted artifact repository using the maven-publish plugin. The vdm-gradle-plugin will automatically mark artifacts — according to the [configuration](#configuration)— for publishing when the maven-publish plugin has been applied to the project. 
 
 For example, given the following build.gradle file.
  
@@ -94,7 +96,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath group: 'com.anaplan.engineering', name: 'vdm-gradle-plugin', version: '2.6.4'
+    classpath group: 'com.anaplan.engineering', name: 'vdm-gradle-plugin', version: '3.0.2'
   }
 }
 
