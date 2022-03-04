@@ -37,10 +37,10 @@ object TestRunner {
     }
 
     internal fun executeBuild(
-            projectDir: File,
-            clean: Boolean = true,
-            tasks: Array<String> = arrayOf("build"),
-            fail: Boolean = false
+        projectDir: File,
+        clean: Boolean = true,
+        tasks: Array<String> = arrayOf("build"),
+        fail: Boolean = false
     ): BuildResult {
         println("Executing build in ${projectDir.absolutePath}")
         setClasspath(File(projectDir, "build.gradle"))
@@ -48,10 +48,10 @@ object TestRunner {
     }
 
     internal fun executeCompositeBuild(
-            projectDir: File,
-            clean: Boolean = true,
-            tasks: Array<String> = arrayOf("build"),
-            fail: Boolean = false
+        projectDir: File,
+        clean: Boolean = true,
+        tasks: Array<String> = arrayOf("build"),
+        fail: Boolean = false
     ): BuildResult {
         println("Executing composite build in ${projectDir.absolutePath}")
         Files.walkFileTree(projectDir.toPath(), object : SimpleFileVisitor<Path>() {
@@ -68,10 +68,10 @@ object TestRunner {
     private fun runBuild(clean: Boolean, projectDir: File, tasks: Array<String>, fail: Boolean): BuildResult {
         val cleanTasks = if (clean) arrayOf("clean") else arrayOf()
         val runner = GradleRunner.create()
-                .withProjectDir(projectDir)
-                .withArguments(*cleanTasks, *tasks, "--info", "--stacktrace")
-                .forwardStdOutput(File(projectDir, "out.log").printWriter())
-                .forwardStdError(File(projectDir, "err.log").printWriter())
+            .withProjectDir(projectDir)
+            .withArguments(*cleanTasks, *tasks, "--info", "--stacktrace")
+            .forwardStdOutput(File(projectDir, "out.log").printWriter())
+            .forwardStdError(File(projectDir, "err.log").printWriter())
         return if (fail) {
             runner.buildAndFail()
         } else {

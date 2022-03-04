@@ -30,36 +30,36 @@ import java.io.File
 
 @RunWith(Parameterized::class)
 class TypeCheckTest(
-        private val testName: String,
-        private val includeTests: Boolean,
-        private val expectSuccess: Boolean,
-        private val expected: Int?
+    private val testName: String,
+    private val includeTests: Boolean,
+    private val expectSuccess: Boolean,
+    private val expected: Int?
 ) {
 
     companion object {
         @JvmStatic
         @Parameterized.Parameters(name = "{0}")
         fun example() = arrayOf(
-                test(testName = "parseError", expectSuccess = false),
-                test(testName = "typeCheckError", expectSuccess = false),
-                test(testName = "parseAndTypeCheckOk", expected = 1),
-                test(testName = "parseErrorInTests", includeTests = true, expectSuccess = false),
-                test(testName = "typeCheckErrorInTests", includeTests = true, expectSuccess = false),
-                test(testName = "parseAndTypeCheckTestsOk", includeTests = true, expected = 2),
-                // the same tests should pass if we only run 'typeCheck'
-                test(testName = "parseErrorInTests", expected = 1),
-                test(testName = "typeCheckErrorInTests", expected = 1),
-                test(testName = "parseAndTypeCheckTestsOk", expected = 1),
-                test(testName = "wrongFileExtensionIgnored", expected = 1),
-                test(testName = "wrongDialect", expectSuccess = false),
-                test(testName = "customSourceFolders", includeTests = true, expected = 2)
+            test(testName = "parseError", expectSuccess = false),
+            test(testName = "typeCheckError", expectSuccess = false),
+            test(testName = "parseAndTypeCheckOk", expected = 1),
+            test(testName = "parseErrorInTests", includeTests = true, expectSuccess = false),
+            test(testName = "typeCheckErrorInTests", includeTests = true, expectSuccess = false),
+            test(testName = "parseAndTypeCheckTestsOk", includeTests = true, expected = 2),
+            // the same tests should pass if we only run 'typeCheck'
+            test(testName = "parseErrorInTests", expected = 1),
+            test(testName = "typeCheckErrorInTests", expected = 1),
+            test(testName = "parseAndTypeCheckTestsOk", expected = 1),
+            test(testName = "wrongFileExtensionIgnored", expected = 1),
+            test(testName = "wrongDialect", expectSuccess = false),
+            test(testName = "customSourceFolders", includeTests = true, expected = 2)
         )
 
         private fun test(
-                testName: String,
-                includeTests: Boolean = false,
-                expectSuccess: Boolean = true,
-                expected: Int? = null
+            testName: String,
+            includeTests: Boolean = false,
+            expectSuccess: Boolean = true,
+            expected: Int? = null
         ) = arrayOf(testName, includeTests, expectSuccess, expected)
     }
 
@@ -68,9 +68,10 @@ class TypeCheckTest(
         val dir = File(javaClass.getResource("/$testName")!!.toURI())
         val task = if (includeTests) "typeCheckTests" else "typeCheck"
         executeBuild(
-                projectDir = dir,
-                tasks = arrayOf(task),
-                fail = !expectSuccess)
+            projectDir = dir,
+            tasks = arrayOf(task),
+            fail = !expectSuccess
+        )
 
         if (expectSuccess) {
             val logFile = File(javaClass.getResource("/$testName/build/vdm/typeCheckTask.log")!!.toURI())
