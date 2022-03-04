@@ -1,12 +1,12 @@
 package com.anaplan.engineering.vdmgradleplugin
 
 import com.anaplan.engineering.vdmgradleplugin.TestRunner.executeBuild
-import org.junit.Assert
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
 import java.util.zip.ZipFile
+import kotlin.test.Test
+import kotlin.test.assertTrue
 
 @RunWith(Parameterized::class)
 class ManifestTest(
@@ -43,7 +43,7 @@ class ManifestTest(
             fail = false
         )
         val packageFile = File(projectDir, "build/libs/$testName-1.0.0.zip")
-        Assert.assertTrue(packageFile.exists())
+        assertTrue(packageFile.exists())
         val manifestText = getManifestText(packageFile)
         expectedAttributes.entries.forEach { (k, v) ->
             manifestText.contains("$k: $v")

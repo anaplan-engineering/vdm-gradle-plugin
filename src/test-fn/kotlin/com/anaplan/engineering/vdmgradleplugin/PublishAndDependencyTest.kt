@@ -22,11 +22,12 @@
 package com.anaplan.engineering.vdmgradleplugin
 
 import com.anaplan.engineering.vdmgradleplugin.TestRunner.executeBuild
-import org.junit.Assert
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @RunWith(Parameterized::class)
 class PublishAndDependencyTest(
@@ -664,7 +665,7 @@ class PublishAndDependencyTest(
 
         private fun checkLibInstalled(dependencyName: String, dependencyVersion: String = "1.0.0", projectDir: File) {
             val libFile = File(projectDir, "lib/$dependencyName-$dependencyVersion.jar")
-            Assert.assertTrue(libFile.exists())
+            assertTrue(libFile.exists())
         }
 
         private fun checkDependency(
@@ -675,9 +676,9 @@ class PublishAndDependencyTest(
         ) {
             val dependencyPrefix = if (dependencyType.isEmpty()) "" else "$dependencyType-"
             val dependencyDir = File(projectDir, "build/vdm/${dependencyPrefix}dependencies/testing/$dependencyName")
-            Assert.assertEquals(present, dependencyDir.exists())
+            assertEquals(present, dependencyDir.exists())
             if (present) {
-                Assert.assertTrue(dependencyDir.isDirectory)
+                assertTrue(dependencyDir.isDirectory)
             }
         }
 
@@ -707,12 +708,12 @@ class PublishAndDependencyTest(
         ) {
             val classifierSuffix = if (classifier.isEmpty()) "" else "-$classifier"
             val packageFile = File(projectDir, "build/libs/$projectName-$version$classifierSuffix.zip")
-            Assert.assertEquals(packagedAndPublished, packageFile.exists())
+            assertEquals(packagedAndPublished, packageFile.exists())
             val publishedFile =
                 File(repository, "testing/$projectName/$version/$projectName-$version$classifierSuffix.zip")
-            Assert.assertEquals(packagedAndPublished, publishedFile.exists())
+            assertEquals(packagedAndPublished, publishedFile.exists())
             if (packagedAndPublished) {
-                Assert.assertEquals(publishedFile.readBytes().toList(), packageFile.readBytes().toList())
+                assertEquals(publishedFile.readBytes().toList(), packageFile.readBytes().toList())
             }
         }
 

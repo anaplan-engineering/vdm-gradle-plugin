@@ -21,10 +21,10 @@
  */
 package com.anaplan.engineering.vdmgradleplugin
 
-import org.junit.Assert
-import org.junit.Test
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class PomRewriterTest {
 
@@ -53,7 +53,7 @@ class PomRewriterTest {
         Files.copy(sourceFileOrig, sourceFileCopy)
         makeChanges(PomRewriter(sourceFileCopy.toFile()))
         val expectedFile = Paths.get(javaClass.getResource("$resourceSuffix-expected.xml").toURI())
-        Assert.assertEquals(
+        assertEquals(
             PomRewriter(expectedFile.toFile()).readDocument().toString(),
             PomRewriter(sourceFileCopy.toFile()).readDocument().toString()
         )

@@ -21,9 +21,9 @@
  */
 package com.anaplan.engineering.vdmgradleplugin
 
-import org.junit.Assert
-import org.junit.Test
 import java.nio.file.Paths
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class JUnitResultDslTest {
 
@@ -192,6 +192,6 @@ class JUnitResultDslTest {
 
     private fun check(testName: String, generator: () -> String) {
         val expectedFile = Paths.get(javaClass.getResource("junit-$testName-expected.xml").toURI())
-        Assert.assertEquals(expectedFile.toFile().readText(), generator())
+        assertEquals(expectedFile.toFile().readText(), generator())
     }
 }

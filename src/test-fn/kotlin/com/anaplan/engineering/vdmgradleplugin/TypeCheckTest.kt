@@ -22,12 +22,12 @@
 package com.anaplan.engineering.vdmgradleplugin
 
 import com.anaplan.engineering.vdmgradleplugin.TestRunner.executeBuild
-import org.junit.Assert
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.overture.interpreter.util.ModuleListInterpreter
 import java.io.File
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 @RunWith(Parameterized::class)
 class TypeCheckTest(
@@ -43,23 +43,23 @@ class TypeCheckTest(
         fun example() = arrayOf(
             test(testName = "parseError", expectSuccess = false),
             test(testName = "typeCheckError", expectSuccess = false),
-            test(testName = "parseAndTypeCheckOk", checkModules = { Assert.assertEquals(1, it.size) }),
+            test(testName = "parseAndTypeCheckOk", checkModules = { assertEquals(1, it.size) }),
             test(testName = "parseErrorInTests", includeTests = true, expectSuccess = false),
             test(testName = "typeCheckErrorInTests", includeTests = true, expectSuccess = false),
             test(
                 testName = "parseAndTypeCheckTestsOk",
                 includeTests = true,
-                checkModules = { Assert.assertEquals(2, it.size) }),
+                checkModules = { assertEquals(2, it.size) }),
             // the same tests should pass if we only run 'typeCheck'
             test(testName = "parseErrorInTests"),
             test(testName = "typeCheckErrorInTests"),
-            test(testName = "parseAndTypeCheckTestsOk", checkModules = { Assert.assertEquals(1, it.size) }),
-            test(testName = "wrongFileExtensionIgnored", checkModules = { Assert.assertEquals(1, it.size) }),
+            test(testName = "parseAndTypeCheckTestsOk", checkModules = { assertEquals(1, it.size) }),
+            test(testName = "wrongFileExtensionIgnored", checkModules = { assertEquals(1, it.size) }),
             test(testName = "wrongDialect", expectSuccess = false),
             test(
                 testName = "customSourceFolders",
                 includeTests = true,
-                checkModules = { Assert.assertEquals(2, it.size) })
+                checkModules = { assertEquals(2, it.size) })
         )
 
         private fun test(

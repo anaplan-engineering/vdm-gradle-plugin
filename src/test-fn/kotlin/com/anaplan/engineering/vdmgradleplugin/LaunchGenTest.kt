@@ -1,9 +1,11 @@
 package com.anaplan.engineering.vdmgradleplugin
 
 import com.anaplan.engineering.vdmgradleplugin.TestRunner.executeBuild
-import org.junit.Assert
-import org.junit.Test
 import java.io.File
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class LaunchGenTest {
 
@@ -19,14 +21,14 @@ class LaunchGenTest {
         )
         val failedTestLaunchFile = File(dir, "$testLaunchDir/TestTest`TestAdd1.launch")
         val passedTestLaunchFile = File(dir, "$testLaunchDir/TestTest`TestAdd2.launch")
-        Assert.assertTrue(failedTestLaunchFile.exists())
-        Assert.assertTrue(passedTestLaunchFile.exists())
-        Assert.assertEquals(
+        assertTrue(failedTestLaunchFile.exists())
+        assertTrue(passedTestLaunchFile.exists())
+        assertEquals(
             File(
                 javaClass.getResource("/generateLaunchGenForAllTest/TestTest`TestAdd1.launch").toURI()
             ).readText(), failedTestLaunchFile.readText()
         )
-        Assert.assertEquals(
+        assertEquals(
             File(
                 javaClass.getResource("/generateLaunchGenForAllTest/TestTest`TestAdd2.launch").toURI()
             ).readText(), passedTestLaunchFile.readText()
@@ -43,9 +45,9 @@ class LaunchGenTest {
         )
         val failedTestLaunchFile = File(dir, "$testLaunchDir/TestTest`TestAdd1.launch")
         val passedTestLaunchFile = File(dir, "$testLaunchDir/TestTest`TestAdd2.launch")
-        Assert.assertTrue(failedTestLaunchFile.exists())
-        Assert.assertFalse(passedTestLaunchFile.exists())
-        Assert.assertEquals(
+        assertTrue(failedTestLaunchFile.exists())
+        assertFalse(passedTestLaunchFile.exists())
+        assertEquals(
             File(
                 javaClass.getResource("/generateLaunchGenForFailedTest/TestTest`TestAdd1.launch").toURI()
             ).readText(), failedTestLaunchFile.readText()
@@ -62,8 +64,8 @@ class LaunchGenTest {
         )
         val failedTestLaunchFile = File(dir, "$testLaunchDir/TestTest`TestAdd1.launch")
         val passedTestLaunchFile = File(dir, "$testLaunchDir/TestTest`TestAdd2.launch")
-        Assert.assertFalse(failedTestLaunchFile.exists())
-        Assert.assertFalse(passedTestLaunchFile.exists())
+        assertFalse(failedTestLaunchFile.exists())
+        assertFalse(passedTestLaunchFile.exists())
     }
 
 

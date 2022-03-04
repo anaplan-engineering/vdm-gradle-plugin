@@ -2,10 +2,11 @@ package com.anaplan.engineering.vdmgradleplugin
 
 import com.anaplan.engineering.vdmgradleplugin.TestRunner.executeBuild
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Assert
-import org.junit.Test
 import java.io.File
 import java.nio.file.Files
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.fail
 
 class generateLaunchGenForAllTestUpToDateTest {
 
@@ -1575,9 +1576,9 @@ class generateLaunchGenForAllTestUpToDateTest {
         result.tasks.forEach { taskResult ->
             val task = Task.fromPath(taskResult.path)
             if (expected.containsKey(task)) {
-                Assert.assertEquals("Unexpected outcome for ${task.name}", expected.get(task), taskResult.outcome)
+                assertEquals(expected.get(task), taskResult.outcome, "Unexpected outcome for ${task.name}")
             } else if (failOnUnexpectedTask) {
-                Assert.fail("Task ${task.name} run but outcome not checked")
+                fail("Task ${task.name} run but outcome not checked")
             }
         }
     }

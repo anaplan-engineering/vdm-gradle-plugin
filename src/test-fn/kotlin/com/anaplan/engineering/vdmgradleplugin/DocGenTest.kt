@@ -22,11 +22,12 @@
 package com.anaplan.engineering.vdmgradleplugin
 
 import com.anaplan.engineering.vdmgradleplugin.TestRunner.executeBuild
-import org.junit.Assert
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @RunWith(Parameterized::class)
 class DocGenTest(
@@ -98,10 +99,10 @@ class DocGenTest(
     private fun checkModules(docDir: File, expectedDir: File) {
         fun check(moduleDir: String) = { module: String ->
             val moduleRender = File(docDir, "$moduleDir/$module.html")
-            Assert.assertTrue(moduleRender.exists())
+            assertTrue(moduleRender.exists())
             val expectedRender = File(expectedDir, "$moduleDir/$module.html")
             if (expectedRender.exists()) {
-                Assert.assertEquals(expectedRender.readText(), moduleRender.readText())
+                assertEquals(expectedRender.readText(), moduleRender.readText())
             }
         }
         modules.forEach(check("modules"))
@@ -111,20 +112,20 @@ class DocGenTest(
     private fun checkPages(docDir: File, expectedDir: File) =
         pages.forEach { page: String ->
             val pageRender = File(docDir, "$page.html")
-            Assert.assertTrue(pageRender.exists())
+            assertTrue(pageRender.exists())
             val expectedRender = File(expectedDir, "$page.html")
             if (expectedRender.exists()) {
-                Assert.assertEquals(expectedRender.readText(), pageRender.readText())
+                assertEquals(expectedRender.readText(), pageRender.readText())
             }
         }
 
     private fun checkResources(docDir: File, expectedDir: File) =
         resources.forEach { resource: String ->
             val pageRender = File(docDir, resource)
-            Assert.assertTrue(pageRender.exists())
+            assertTrue(pageRender.exists())
             val expectedResource = File(expectedDir, resource)
             if (expectedResource.exists()) {
-                Assert.assertEquals(expectedResource.readBytes().toList(), pageRender.readBytes().toList())
+                assertEquals(expectedResource.readBytes().toList(), pageRender.readBytes().toList())
             }
         }
 

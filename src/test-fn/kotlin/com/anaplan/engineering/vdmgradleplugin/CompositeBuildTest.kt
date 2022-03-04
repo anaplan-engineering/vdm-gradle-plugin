@@ -22,10 +22,10 @@
 package com.anaplan.engineering.vdmgradleplugin
 
 import com.anaplan.engineering.vdmgradleplugin.TestRunner.executeCompositeBuild
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
+import kotlin.test.Test
 
 @RunWith(Parameterized::class)
 class CompositeBuildTest(

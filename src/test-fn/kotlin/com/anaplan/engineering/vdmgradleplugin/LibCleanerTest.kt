@@ -22,9 +22,10 @@
 package com.anaplan.engineering.vdmgradleplugin
 
 import com.anaplan.engineering.vdmgradleplugin.TestRunner.executeBuild
-import org.junit.Assert
-import org.junit.Test
 import java.io.File
+import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class LibCleanerTest {
 
@@ -37,13 +38,13 @@ class LibCleanerTest {
 
         val vdmLibDir = File(parentDir, "vdmlib")
         val installedLibFile = File(vdmLibDir, "lib/javalib-1.0.0.jar")
-        Assert.assertFalse(installedLibFile.exists())
+        assertFalse(installedLibFile.exists())
 
         executeBuild(projectDir = vdmLibDir, tasks = arrayOf("test"), fail = false)
-        Assert.assertTrue(installedLibFile.exists())
+        assertTrue(installedLibFile.exists())
 
         executeBuild(projectDir = vdmLibDir, tasks = arrayOf("clean"), fail = false)
-        Assert.assertFalse(installedLibFile.exists())
+        assertFalse(installedLibFile.exists())
 
     }
 }

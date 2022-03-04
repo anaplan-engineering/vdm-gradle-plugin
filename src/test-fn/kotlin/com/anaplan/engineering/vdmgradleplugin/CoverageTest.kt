@@ -1,9 +1,11 @@
 package com.anaplan.engineering.vdmgradleplugin
 
 import com.anaplan.engineering.vdmgradleplugin.TestRunner.executeBuild
-import org.junit.Assert
-import org.junit.Test
 import java.io.File
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class CoverageTest {
 
@@ -16,9 +18,9 @@ class CoverageTest {
             fail = false
         )
         val coverageFile = File(dir, "build/vdm/coverage/Main.html")
-        Assert.assertTrue(coverageFile.exists())
+        assertTrue(coverageFile.exists())
         val expectedHtml = File(javaClass.getResource("/coverageTest/expected.html").toURI())
-        Assert.assertEquals(expectedHtml.readText(), coverageFile.readText())
+        assertEquals(expectedHtml.readText(), coverageFile.readText())
     }
 
     @Test
@@ -30,6 +32,6 @@ class CoverageTest {
             fail = false
         )
         val coverageFile = File(dir, "build/vdm/coverage/Main.html")
-        Assert.assertFalse(coverageFile.exists())
+        assertFalse(coverageFile.exists())
     }
 }

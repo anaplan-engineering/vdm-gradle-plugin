@@ -22,12 +22,13 @@
 package com.anaplan.engineering.vdmgradleplugin
 
 import com.anaplan.engineering.vdmgradleplugin.TestRunner.executeBuild
-import org.junit.Assert
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
 import java.util.zip.ZipFile
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @RunWith(Parameterized::class)
 class PackageTest(
@@ -99,8 +100,8 @@ class PackageTest(
     private fun checkPackage(projectDir: File, classifier: String) {
         val classifierSuffix = if (classifier.isEmpty()) "" else "-$classifier"
         val packageFile = File(projectDir, "build/libs/$testName-1.0.0$classifierSuffix.zip")
-        Assert.assertTrue(packageFile.exists())
-        Assert.assertEquals(expectedEntries.get(classifier), getActualEntries(packageFile))
+        assertTrue(packageFile.exists())
+        assertEquals(expectedEntries.get(classifier), getActualEntries(packageFile))
     }
 
     private fun getActualEntries(file: File) =

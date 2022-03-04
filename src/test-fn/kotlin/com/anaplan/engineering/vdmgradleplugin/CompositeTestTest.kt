@@ -22,11 +22,11 @@
 package com.anaplan.engineering.vdmgradleplugin
 
 import com.anaplan.engineering.vdmgradleplugin.TestRunner.executeCompositeBuild
-import org.junit.Assert
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
+import kotlin.test.Test
+import kotlin.test.assertTrue
 
 @RunWith(Parameterized::class)
 class CompositeTestTest(
@@ -62,7 +62,7 @@ class CompositeTestTest(
                 it.isDirectory && File(it, "build.gradle").exists()
             }.forEach {
                 val junitFile = File(it, "build/vdm/junitreports/TEST-TestTest.xml")
-                Assert.assertTrue(junitFile.exists())
+                assertTrue(junitFile.exists())
             }
         }
     }

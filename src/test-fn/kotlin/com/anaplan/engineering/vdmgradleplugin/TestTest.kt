@@ -22,11 +22,11 @@
 package com.anaplan.engineering.vdmgradleplugin
 
 import com.anaplan.engineering.vdmgradleplugin.TestRunner.executeBuild
-import org.junit.Assert
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
+import kotlin.test.Test
+import kotlin.test.assertTrue
 
 @RunWith(Parameterized::class)
 class TestTest(
@@ -67,7 +67,7 @@ class TestTest(
         val junitFile = File(dir, "build/vdm/junitreports/TEST-TestTest.xml")
         val junitFileA = File(dir, "a/build/vdm/junitreports/TEST-TestTestA.xml")
         val junitFileB = File(dir, "b/build/vdm/junitreports/TEST-TestTestB.xml")
-        Assert.assertTrue(junitFile.exists() || (junitFileA.exists() && junitFileB.exists()))
+        assertTrue(junitFile.exists() || (junitFileA.exists() && junitFileB.exists()))
     }
 
 }
