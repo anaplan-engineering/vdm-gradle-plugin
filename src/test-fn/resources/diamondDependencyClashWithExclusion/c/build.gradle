@@ -26,5 +26,5 @@ repositories {
 apply plugin: 'vdm'
 
 dependencies {
-  vdm group: 'testing', name: 'a', version: '2.0.0'
+    vdm group: 'testing', name: 'a', version: '2.0.0'
 }

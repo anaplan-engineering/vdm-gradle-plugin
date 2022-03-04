@@ -31,43 +31,55 @@ import java.util.zip.ZipFile
 
 @RunWith(Parameterized::class)
 class PackageTest(
-        private val testName: String,
-        private val expectedEntries: Map<String, Set<String>>
+    private val testName: String,
+    private val expectedEntries: Map<String, Set<String>>
 ) {
 
     companion object {
         @JvmStatic
         @Parameterized.Parameters(name = "{0}")
         fun example() = arrayOf(
-                test(testName = "parseAndTypeCheckOk", expectedEntries = mapOf(
-                        "" to setOf("manifest.mf", "parse-and-type-check-ok.vdmsl")
-                )),
-                test(testName = "parseAndTypeCheckTestsOk", expectedEntries = mapOf(
-                        "" to setOf("manifest.mf", "parse-and-type-check-ok.vdmsl"),
-                        "test" to setOf("manifest.mf", "test-parse-and-type-check-ok.vdmsl")
-                )),
-                test(testName = "parseAndTypeCheckTestsWithMdOk", expectedEntries = mapOf(
-                        "" to setOf("manifest.mf", "parse-and-type-check-ok.vdmsl"),
-                        "test" to setOf("manifest.mf", "test-parse-and-type-check-ok.vdmsl"),
-                        "md" to setOf("manifest.mf", "index.md")
-                )),
-                test(testName = "packageWithNesting", expectedEntries = mapOf(
-                        "" to setOf("manifest.mf", "parse-and-type-check-ok.vdmsl", "subdir/other.vdmsl"),
-                        "test" to setOf("manifest.mf", "test-parse-and-type-check-ok.vdmsl", "subdir/test-other.vdmsl"),
-                        "md" to setOf("manifest.mf", "index.md", "subdir/other.md")
-                )),
-                test(testName = "packageWithResources", expectedEntries = mapOf(
-                        "" to setOf("manifest.mf", "a.vdmsl", "b.vdmsl"),
-                        "md" to setOf("manifest.mf", "A.md", "images/b.png")
-                )),
-                test(testName = "wrongFileExtensionIgnored", expectedEntries = mapOf(
-                        "" to setOf("manifest.mf", "parse-and-type-check-ok.vdmsl")
-                ))
+            test(
+                testName = "parseAndTypeCheckOk", expectedEntries = mapOf(
+                    "" to setOf("manifest.mf", "parse-and-type-check-ok.vdmsl")
+                )
+            ),
+            test(
+                testName = "parseAndTypeCheckTestsOk", expectedEntries = mapOf(
+                    "" to setOf("manifest.mf", "parse-and-type-check-ok.vdmsl"),
+                    "test" to setOf("manifest.mf", "test-parse-and-type-check-ok.vdmsl")
+                )
+            ),
+            test(
+                testName = "parseAndTypeCheckTestsWithMdOk", expectedEntries = mapOf(
+                    "" to setOf("manifest.mf", "parse-and-type-check-ok.vdmsl"),
+                    "test" to setOf("manifest.mf", "test-parse-and-type-check-ok.vdmsl"),
+                    "md" to setOf("manifest.mf", "index.md")
+                )
+            ),
+            test(
+                testName = "packageWithNesting", expectedEntries = mapOf(
+                    "" to setOf("manifest.mf", "parse-and-type-check-ok.vdmsl", "subdir/other.vdmsl"),
+                    "test" to setOf("manifest.mf", "test-parse-and-type-check-ok.vdmsl", "subdir/test-other.vdmsl"),
+                    "md" to setOf("manifest.mf", "index.md", "subdir/other.md")
+                )
+            ),
+            test(
+                testName = "packageWithResources", expectedEntries = mapOf(
+                    "" to setOf("manifest.mf", "a.vdmsl", "b.vdmsl"),
+                    "md" to setOf("manifest.mf", "A.md", "images/b.png")
+                )
+            ),
+            test(
+                testName = "wrongFileExtensionIgnored", expectedEntries = mapOf(
+                    "" to setOf("manifest.mf", "parse-and-type-check-ok.vdmsl")
+                )
+            )
         )
 
         private fun test(
-                testName: String,
-                expectedEntries: Map<String, Set<String>>
+            testName: String,
+            expectedEntries: Map<String, Set<String>>
         ): Array<Any> = arrayOf(testName, expectedEntries)
     }
 
@@ -75,15 +87,16 @@ class PackageTest(
     fun packageTest() {
         val projectDir = File(javaClass.getResource("/$testName").toURI())
         executeBuild(
-                projectDir = projectDir,
-                tasks = arrayOf("package"),
-                fail = false)
+            projectDir = projectDir,
+            tasks = arrayOf("package"),
+            fail = false
+        )
         expectedEntries.keys.forEach {
             checkPackage(projectDir, it)
         }
     }
 
-    private fun checkPackage(projectDir: File, classifier:String) {
+    private fun checkPackage(projectDir: File, classifier: String) {
         val classifierSuffix = if (classifier.isEmpty()) "" else "-$classifier"
         val packageFile = File(projectDir, "build/libs/$testName-1.0.0$classifierSuffix.zip")
         Assert.assertTrue(packageFile.exists())

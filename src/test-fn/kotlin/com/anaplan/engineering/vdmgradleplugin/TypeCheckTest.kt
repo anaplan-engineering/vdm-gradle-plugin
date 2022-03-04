@@ -31,36 +31,42 @@ import java.io.File
 
 @RunWith(Parameterized::class)
 class TypeCheckTest(
-        private val testName: String,
-        private val includeTests: Boolean,
-        private val expectSuccess: Boolean,
-        private val checkModules: (ModuleListInterpreter) -> Unit
+    private val testName: String,
+    private val includeTests: Boolean,
+    private val expectSuccess: Boolean,
+    private val checkModules: (ModuleListInterpreter) -> Unit
 ) {
 
     companion object {
         @JvmStatic
         @Parameterized.Parameters(name = "{0}")
         fun example() = arrayOf(
-                test(testName = "parseError", expectSuccess = false),
-                test(testName = "typeCheckError", expectSuccess = false),
-                test(testName = "parseAndTypeCheckOk", checkModules = { Assert.assertEquals(1, it.size) }),
-                test(testName = "parseErrorInTests", includeTests = true, expectSuccess = false),
-                test(testName = "typeCheckErrorInTests", includeTests = true, expectSuccess = false),
-                test(testName = "parseAndTypeCheckTestsOk", includeTests = true, checkModules = { Assert.assertEquals(2, it.size) }),
-                // the same tests should pass if we only run 'typeCheck'
-                test(testName = "parseErrorInTests"),
-                test(testName = "typeCheckErrorInTests"),
-                test(testName = "parseAndTypeCheckTestsOk", checkModules = { Assert.assertEquals(1, it.size) }),
-                test(testName = "wrongFileExtensionIgnored", checkModules = { Assert.assertEquals(1, it.size) }),
-                test(testName = "wrongDialect", expectSuccess = false),
-                test(testName = "customSourceFolders", includeTests = true, checkModules = { Assert.assertEquals(2, it.size) })
+            test(testName = "parseError", expectSuccess = false),
+            test(testName = "typeCheckError", expectSuccess = false),
+            test(testName = "parseAndTypeCheckOk", checkModules = { Assert.assertEquals(1, it.size) }),
+            test(testName = "parseErrorInTests", includeTests = true, expectSuccess = false),
+            test(testName = "typeCheckErrorInTests", includeTests = true, expectSuccess = false),
+            test(
+                testName = "parseAndTypeCheckTestsOk",
+                includeTests = true,
+                checkModules = { Assert.assertEquals(2, it.size) }),
+            // the same tests should pass if we only run 'typeCheck'
+            test(testName = "parseErrorInTests"),
+            test(testName = "typeCheckErrorInTests"),
+            test(testName = "parseAndTypeCheckTestsOk", checkModules = { Assert.assertEquals(1, it.size) }),
+            test(testName = "wrongFileExtensionIgnored", checkModules = { Assert.assertEquals(1, it.size) }),
+            test(testName = "wrongDialect", expectSuccess = false),
+            test(
+                testName = "customSourceFolders",
+                includeTests = true,
+                checkModules = { Assert.assertEquals(2, it.size) })
         )
 
         private fun test(
-                testName: String,
-                includeTests: Boolean = false,
-                expectSuccess: Boolean = true,
-                checkModules: (ModuleListInterpreter) -> Unit = {}
+            testName: String,
+            includeTests: Boolean = false,
+            expectSuccess: Boolean = true,
+            checkModules: (ModuleListInterpreter) -> Unit = {}
         ): Array<Any> = arrayOf(testName, includeTests, expectSuccess, checkModules)
     }
 
@@ -69,9 +75,10 @@ class TypeCheckTest(
         val dir = File(javaClass.getResource("/$testName").toURI())
         val task = if (includeTests) "typeCheckTests" else "typeCheck"
         executeBuild(
-                projectDir = dir,
-                tasks = arrayOf(task),
-                fail = !expectSuccess)
+            projectDir = dir,
+            tasks = arrayOf(task),
+            fail = !expectSuccess
+        )
 
 //        if (expectSuccess) {
 //            val vdmsl = VDMSL()

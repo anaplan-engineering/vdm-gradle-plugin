@@ -62,7 +62,8 @@ class TestTest(
         executeBuild(
             projectDir = dir,
             tasks = arrayOf("test"),
-            fail = !expectSuccess)
+            fail = !expectSuccess
+        )
         val junitFile = File(dir, "build/vdm/junitreports/TEST-TestTest.xml")
         val junitFileA = File(dir, "a/build/vdm/junitreports/TEST-TestTestA.xml")
         val junitFileB = File(dir, "b/build/vdm/junitreports/TEST-TestTestB.xml")

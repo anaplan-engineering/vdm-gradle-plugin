@@ -10,24 +10,24 @@ version = '1.0.0'
 apply plugin: 'maven-publish'
 
 publishing {
-  repositories {
-    maven {
-      url 'file://' + file('../.m2/repository').absolutePath
+    repositories {
+        maven {
+            url 'file://' + file('../.m2/repository').absolutePath
+        }
     }
-  }
 }
 
 repositories {
-  maven {
-    url 'file://' + file('../.m2/repository').absolutePath
-  }
+    maven {
+        url 'file://' + file('../.m2/repository').absolutePath
+    }
 }
 
 apply plugin: 'vdm'
 
 dependencies {
-  vdm group: 'testing', name: 'numeric', version: '1.0.0'
-  vdm group: 'testing', name: 'ord', version: '1.0.0'
+    vdm group: 'testing', name: 'numeric', version: '1.0.0'
+    vdm group: 'testing', name: 'ord', version: '1.0.0'
 }
 
 
