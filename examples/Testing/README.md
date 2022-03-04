@@ -13,7 +13,7 @@ $ gradle test
 Parsed 2 modules in 0.001 secs. No syntax errors
 Warning 5000: Definition 'TestAdd' not used in 'TestAdder' (/home/si/git/fspec-tools/vdm-gradle-plugin/examples/Testing/src/test/vdm/TestAdder.vdmsl) at line 7:3
 Type checked 2 modules in 0.003 secs. No type errors and 1 warning
-Saved 2 modules to /home/si/git/fspec-tools/vdm-gradle-plugin/examples/Testing/build/vdm/generated.lib in 0.03 secs. 
+Saved 2 modules to /home/si/git/fspec-tools/vdm-gradle-plugin/examples/Testing/build/vdm/generated.lib in 0.03 secs.
 
 > Task :test
 Loaded 2 modules from /home/si/git/fspec-tools/vdm-gradle-plugin/examples/Testing/build/vdm/generated.lib in 0.013 secs
@@ -21,7 +21,7 @@ Loaded 2 modules from /home/si/git/fspec-tools/vdm-gradle-plugin/examples/Testin
 
 BUILD SUCCESSFUL in 1s
 3 actionable tasks: 3 executed
-``` 
+```
 
 This does not give a great deal of information, so we can either add more logging:
 
@@ -43,4 +43,5 @@ BUILD SUCCESSFUL in 0s
 
 Or inspect the generated JUnit reports. These can be found in `build/vdm/junitreports`.
 
-Now try invalidating the post condition of ``TestAdder`TestAdd`` and re-running. The build will now fail as there are failing tests.
+Now try invalidating the post condition of ``TestAdder`TestAdd`` and re-running. The build will now fail as there are
+failing tests.
