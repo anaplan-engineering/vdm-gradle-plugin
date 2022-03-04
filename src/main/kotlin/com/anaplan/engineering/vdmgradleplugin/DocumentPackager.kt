@@ -38,11 +38,11 @@ internal fun Project.addDocPackageTask() {
     createVdmTask(docPackage, DocPackageTask::class.java)
     afterEvaluate { project ->
         val docPackageTask = project.tasks.getByName(docPackage)
-                ?: throw GradleException("Cannot find document package task")
+            ?: throw GradleException("Cannot find document package task")
         docPackageTask.dependsOn(docGen)
         if (project.vdmConfig.autoDocGeneration) {
             val assembleTask = project.tasks.getByName(LifecycleBasePlugin.ASSEMBLE_TASK_NAME)
-                    ?: throw GradleException("Cannot find assemble task")
+                ?: throw GradleException("Cannot find assemble task")
             assembleTask.dependsOn(docPackage)
         }
     }
@@ -54,7 +54,7 @@ internal val Project.docPackageFile: File
 
 
 open class DocPackageTask : DefaultTask() {
-    val docFiles : FileCollection
+    val docFiles: FileCollection
         @InputFiles
         get() {
             val resourceTypes = project.vdmConfig.resourceFileTypes
@@ -71,8 +71,8 @@ open class DocPackageTask : DefaultTask() {
             return
         }
         createZip(
-                docPackageFile,
-                ZipContents(docFiles, baseDir = project.vdmGenDocsDir)
+            docPackageFile,
+            ZipContents(docFiles, baseDir = project.vdmGenDocsDir)
         )
     }
 }

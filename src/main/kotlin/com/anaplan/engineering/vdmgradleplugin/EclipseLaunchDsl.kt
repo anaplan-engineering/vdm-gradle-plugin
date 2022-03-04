@@ -27,7 +27,7 @@ annotation class EclipseLaunchResultMarker
 @EclipseLaunchResultMarker
 abstract class EclipseLaunchXmlTag(tagName: String) : XmlTag(tagName)
 
-class LaunchConfigurationTag: EclipseLaunchXmlTag("launchConfiguration") {
+class LaunchConfigurationTag : EclipseLaunchXmlTag("launchConfiguration") {
     @Attribute
     val type = "org.overture.ide.vdmsl.debug.launchConfigurationType"
 
@@ -47,7 +47,7 @@ class LaunchConfigurationTag: EclipseLaunchXmlTag("launchConfiguration") {
     }
 }
 
-abstract class TypedAttributeTag(tagName: String): EclipseLaunchXmlTag(tagName) {
+abstract class TypedAttributeTag(tagName: String) : EclipseLaunchXmlTag(tagName) {
     @Attribute
     var key: String? = null
 

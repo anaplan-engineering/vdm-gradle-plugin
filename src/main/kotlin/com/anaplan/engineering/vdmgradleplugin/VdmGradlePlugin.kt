@@ -100,22 +100,25 @@ internal val Project.vdmTestPackageFile: File
     get() = File(buildDir, "libs/$name-$version-test.zip")
 
 internal fun Project.createVdmTask(name: String, type: Class<out Task>) =
-        tasks.create(mapOf<String, Any>(
-                "name" to name,
-                "type" to type,
-                "group" to vdmTaskGroup
-        ))
+    tasks.create(
+        mapOf<String, Any>(
+            "name" to name,
+            "type" to type,
+            "group" to vdmTaskGroup
+        )
+    )
 
 internal fun Project.locateAllSpecifications(dialect: Dialect, includeTests: Boolean) =
-        project.files(
-                locateSpecifications(project.vdmDependencyDir, dialect) +
-                        locateSpecifications(project.vdmSourceDir, dialect) +
-                        if (includeTests) {
-                            locateSpecifications(project.vdmTestDependencyDir, dialect) +
-                                    locateSpecifications(project.vdmTestSourceDir, dialect)
-                        } else {
-                            listOf()
-                        })
+    project.files(
+        locateSpecifications(project.vdmDependencyDir, dialect) +
+            locateSpecifications(project.vdmSourceDir, dialect) +
+            if (includeTests) {
+                locateSpecifications(project.vdmTestDependencyDir, dialect) +
+                    locateSpecifications(project.vdmTestSourceDir, dialect)
+            } else {
+                listOf()
+            }
+    )
 
 internal fun locateSpecifications(directory: File, dialect: Dialect): List<File> {
     return locateFilesWithExtension(directory, dialect.fileExtension)
