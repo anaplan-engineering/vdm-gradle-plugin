@@ -26,8 +26,8 @@ sourceSets {
 
 task functionalTestClasspathJar(type: Jar) {
     inputs.files(sourceSets.test.runtimeClasspath)
-            .withPropertyName("runtimeClasspath")
-            .withNormalizer(ClasspathNormalizer)
+        .withPropertyName("runtimeClasspath")
+        .withNormalizer(ClasspathNormalizer)
     archiveFileName = "functionalTestClasspath.jar"
     doFirst {
         manifest {
