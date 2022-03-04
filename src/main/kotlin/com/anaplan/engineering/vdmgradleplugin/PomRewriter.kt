@@ -68,8 +68,9 @@ class PomRewriter(val file: File) {
         }
     }
 
-    private fun addDependenciesNode(document: Document) : Node {
-        val projectNode = getUniqueNode("/project", document) ?: throw IllegalStateException("No project node in pom file")
+    private fun addDependenciesNode(document: Document): Node {
+        val projectNode =
+            getUniqueNode("/project", document) ?: throw IllegalStateException("No project node in pom file")
         val dependenciesNode = document.createElement("dependencies")
         projectNode.appendChild(dependenciesNode)
         return dependenciesNode
@@ -101,11 +102,11 @@ class PomRewriter(val file: File) {
     }
 
     data class Dependency(
-            val groupId: String,
-            val artifactId: String,
-            val version: String,
-            val classifier: String? = null,
-            val type: String? = null,
-            val scope: String?
+        val groupId: String,
+        val artifactId: String,
+        val version: String,
+        val classifier: String? = null,
+        val type: String? = null,
+        val scope: String?
     )
 }

@@ -40,12 +40,16 @@ class ErrorTag : JUnitXmlTag("error") {
 class TestCaseTag : JUnitXmlTag("testcase") {
     @Attribute
     var name: String? = null
+
     @Attribute
     var time: String? = null
+
     @Attribute
     var classname: String? = null
+
     @Element
     var failure: FailureTag? = null
+
     @Element
     var error: ErrorTag? = null
 
@@ -69,16 +73,22 @@ class TestCaseTag : JUnitXmlTag("testcase") {
 class TestSuiteTag : JUnitXmlTag("testsuite") {
     @Attribute
     var name: String? = null
+
     @Attribute
     var time: String? = null
+
     @Attribute
     var timestamp: String? = null
+
     @Attribute
     var hostname: String? = null
+
     @Attribute
     var tests: Int = 0
+
     @Attribute
     var errors: Int = 0
+
     @Attribute
     var failures: Int = 0
 

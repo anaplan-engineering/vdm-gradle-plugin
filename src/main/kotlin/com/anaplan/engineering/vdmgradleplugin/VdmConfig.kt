@@ -74,8 +74,8 @@ open class PrettyPrinterConfig @javax.inject.Inject constructor(@Suppress("UNUSE
     var minListLengthToUseNls: Int = 5
 
     fun toConfig() = PrettyPrintConfig(
-            logUnhandledCases = logUnhandledCases,
-            minListLengthToUseNls = minListLengthToUseNls
+        logUnhandledCases = logUnhandledCases,
+        minListLengthToUseNls = minListLengthToUseNls
     )
 }
 

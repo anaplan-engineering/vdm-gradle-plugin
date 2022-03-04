@@ -34,10 +34,10 @@ internal fun Project.addPackageTask() {
     createVdmTask(vdmPackage, VdmPackageTask::class.java)
     afterEvaluate { project ->
         val vdmPackageTask = project.tasks.getByName(vdmPackage)
-                ?: throw TaskInstantiationException("Cannot find VDM package task")
+            ?: throw TaskInstantiationException("Cannot find VDM package task")
         vdmPackageTask.dependsOn(typeCheckTests)
         val assembleTask = project.tasks.getByName(LifecycleBasePlugin.ASSEMBLE_TASK_NAME)
-                ?: throw TaskInstantiationException("Cannot find assemble task")
+            ?: throw TaskInstantiationException("Cannot find assemble task")
         assembleTask.dependsOn(vdmPackage)
     }
 }
@@ -89,9 +89,9 @@ open class VdmPackageTask() : DefaultTask() {
 
     private fun createSourcePackage() {
         createZip(
-                vdmPackageFile,
-                ZipContents(sourceFiles, baseDir = project.vdmSourceDir),
-                project.createManifestForZip("main")
+            vdmPackageFile,
+            ZipContents(sourceFiles, baseDir = project.vdmSourceDir),
+            project.createManifestForZip("main")
         )
     }
 
@@ -103,9 +103,9 @@ open class VdmPackageTask() : DefaultTask() {
             return
         }
         createZip(
-                vdmMdPackageFile,
-                ZipContents(mdSourceFiles, baseDir = project.vdmMdDir),
-                project.createManifestForZip("md")
+            vdmMdPackageFile,
+            ZipContents(mdSourceFiles, baseDir = project.vdmMdDir),
+            project.createManifestForZip("md")
 
         )
     }
@@ -118,9 +118,9 @@ open class VdmPackageTask() : DefaultTask() {
             return
         }
         createZip(
-                vdmTestPackageFile,
-                ZipContents(testSourceFiles, baseDir = project.vdmTestSourceDir),
-                project.createManifestForZip("test")
+            vdmTestPackageFile,
+            ZipContents(testSourceFiles, baseDir = project.vdmTestSourceDir),
+            project.createManifestForZip("test")
         )
     }
 }

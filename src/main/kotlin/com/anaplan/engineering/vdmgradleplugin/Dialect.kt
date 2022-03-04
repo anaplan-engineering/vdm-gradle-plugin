@@ -21,16 +21,14 @@
  */
 package com.anaplan.engineering.vdmgradleplugin
 
-import org.overture.interpreter.VDMJ
 import org.overture.interpreter.VDMPP
 import org.overture.interpreter.VDMRT
 import org.overture.interpreter.VDMSL
 import org.overture.interpreter.runtime.Interpreter
 import org.overture.interpreter.util.ExitStatus
 import java.io.File
-import java.util.*
 
-enum class Dialect(val fileExtension : String, val createController : () -> GradleVdm) {
+enum class Dialect(val fileExtension: String, val createController: () -> GradleVdm) {
     vdmsl("vdmsl", { GradleVdmSl() }),
     vdmpp("vdmpp", { GradleVdmPp() }),
     vdmrt("vdmrt", { GradleVdmRt() }),

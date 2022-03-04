@@ -33,7 +33,8 @@ internal fun Project.addTypeCheckTasks() {
     createVdmTask(typeCheck, VdmTypeCheckMainTask::class.java)
     createVdmTask(typeCheckTests, VdmTypeCheckTestTask::class.java)
     afterEvaluate {
-        it.tasks.matching { it.name == typeCheck || it.name == typeCheckTests }.forEach { it.dependsOn(dependencyUnpack) }
+        it.tasks.matching { it.name == typeCheck || it.name == typeCheckTests }
+            .forEach { it.dependsOn(dependencyUnpack) }
     }
 }
 
@@ -68,13 +69,13 @@ open class VdmTypeCheckTask(private val includeTests: Boolean) : OvertureTask() 
     }
 
     private fun constructArgs() =
-            listOf(
-                    "--dialect", dialect.name,
-                    "--log-level", project.gradle.startParameter.logLevel,
-                    "--status-file", statusFile,
-                    "--run-tests", false,
-                    "--monitor-memory", project.vdmConfig.monitorOvertureMemory
-            ) + specificationFiles.map { it.absolutePath }
+        listOf(
+            "--dialect", dialect.name,
+            "--log-level", project.gradle.startParameter.logLevel,
+            "--status-file", statusFile,
+            "--run-tests", false,
+            "--monitor-memory", project.vdmConfig.monitorOvertureMemory
+        ) + specificationFiles.map { it.absolutePath }
 
 }
 

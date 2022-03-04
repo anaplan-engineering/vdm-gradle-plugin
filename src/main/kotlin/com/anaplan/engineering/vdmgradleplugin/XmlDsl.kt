@@ -30,7 +30,7 @@ interface ElementTag {
 
 @Target(AnnotationTarget.PROPERTY)
 annotation class Attribute(
-        val name: String = ""
+    val name: String = ""
 )
 
 @Target(AnnotationTarget.PROPERTY)
@@ -48,7 +48,8 @@ abstract class XmlTag(private val tagName: String) : ElementTag {
         val elementLists = javaClass.kotlin.memberProperties.filter { property ->
             property.findAnnotation<ElementList>() != null
         }
-        @Suppress("UNCHECKED_CAST") val childTags = elementLists.map { property -> property.get(this) as List<ElementTag> }.flatten() +
+        @Suppress("UNCHECKED_CAST") val childTags =
+            elementLists.map { property -> property.get(this) as List<ElementTag> }.flatten() +
                 elements.map { property -> property.get(this) }.filterNotNull().map { it as ElementTag }
         if (childTags.isEmpty()) {
             builder.append("$indent<$tagName${renderAttributes()}/>\n")
