@@ -23,8 +23,13 @@ package com.anaplan.engineering.vdmgradleplugin
 
 import org.junit.Assert
 import org.junit.Test
+import org.w3c.dom.Document
+import java.io.File
+import java.io.FileInputStream
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
+import javax.xml.parsers.DocumentBuilderFactory
 
 class PomRewriterTest {
 
@@ -44,16 +49,27 @@ class PomRewriterTest {
 
     private fun check(resourceSuffix: String, makeChanges: (PomRewriter) -> Unit) {
         val tempDir = Files.createTempDirectory(resourceSuffix)
-        val sourceFileOrig = Paths.get(javaClass.getResource("$resourceSuffix-source.xml").toURI())
+        val sourceFileOrig = Paths.get(javaClass.getResource("$resourceSuffix-source.xml")!!.toURI())
         val sourceFileCopy = tempDir.resolve("$resourceSuffix-source.xml")
         Files.copy(sourceFileOrig, sourceFileCopy)
         makeChanges(PomRewriter(sourceFileCopy.toFile()))
-        val expectedFile = Paths.get(javaClass.getResource("$resourceSuffix-expected.xml").toURI())
+        val expectedFile = Paths.get(javaClass.getResource("$resourceSuffix-expected.xml")!!.toURI())
         Assert.assertEquals(
-            PomRewriter(expectedFile.toFile()).readDocument().toString(),
-            PomRewriter(sourceFileCopy.toFile()).readDocument().toString()
+                XmlHelper.normalizeDocument(expectedFile),
+                XmlHelper.normalizeDocument(sourceFileCopy)
         )
     }
 
+    private object XmlHelper {
+        fun readDocument(file: File): Document {
+            val stream = FileInputStream(file)
+            val builder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+            return builder.parse(stream)
+        }
+
+        fun readDocument(path: Path) = readDocument(path.toFile())
+
+        fun normalizeDocument(path: Path) = readDocument(path).normalizeDocument()
+    }
 
 }
