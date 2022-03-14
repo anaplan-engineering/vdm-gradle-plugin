@@ -21,6 +21,7 @@
  */
 package com.anaplan.engineering.vdmgradleplugin
 
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.*
@@ -64,14 +65,26 @@ open class VdmTypeCheckTask(private val includeTests: Boolean) : OvertureTask() 
             super.setArgs(constructArgs())
             super.setClasspath(project.files(createClassPathJar()))
             super.exec()
+            writeStatus()
         }
+    }
+
+    private fun writeStatus() {
+        val exitStatus = super.getExecutionResult().get().exitValue
+        statusFile.writeText(when (exitStatus) {
+            0 -> "Success"
+            1 -> "FailingTests"
+            2 -> "UnexpectedDialect"
+            3 -> "ParseFailed"
+            4 -> "TypeCheckFailed"
+            else -> throw GradleException("Unknown exit status of OvertureWrapper: $exitStatus")
+        })
     }
 
     private fun constructArgs() =
             listOf(
                     "--dialect", dialect.name,
                     "--log-level", project.gradle.startParameter.logLevel,
-                    "--status-file", statusFile,
                     "--run-tests", false,
                     "--monitor-memory", project.vdmConfig.monitorOvertureMemory
             ) + specificationFiles.map { it.absolutePath }
