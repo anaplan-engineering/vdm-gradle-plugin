@@ -22,12 +22,12 @@
 package com.anaplan.engineering.vdmgradleplugin
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.TaskInstantiationException
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 import java.io.File
 
@@ -38,11 +38,11 @@ internal fun Project.addDocPackageTask() {
     createVdmTask(docPackage, DocPackageTask::class.java)
     afterEvaluate { project ->
         val docPackageTask = project.tasks.getByName(docPackage)
-                ?: throw TaskInstantiationException("Cannot find document package task")
+                ?: throw GradleException("Cannot find document package task")
         docPackageTask.dependsOn(docGen)
         if (project.vdmConfig.autoDocGeneration) {
             val assembleTask = project.tasks.getByName(LifecycleBasePlugin.ASSEMBLE_TASK_NAME)
-                    ?: throw TaskInstantiationException("Cannot find assemble task")
+                    ?: throw GradleException("Cannot find assemble task")
             assembleTask.dependsOn(docPackage)
         }
     }

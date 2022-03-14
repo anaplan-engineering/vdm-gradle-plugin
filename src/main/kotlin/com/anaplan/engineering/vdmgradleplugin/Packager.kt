@@ -22,9 +22,13 @@
 package com.anaplan.engineering.vdmgradleplugin
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskAction
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 import java.io.File
 
@@ -34,10 +38,10 @@ internal fun Project.addPackageTask() {
     createVdmTask(vdmPackage, VdmPackageTask::class.java)
     afterEvaluate { project ->
         val vdmPackageTask = project.tasks.getByName(vdmPackage)
-                ?: throw TaskInstantiationException("Cannot find VDM package task")
+                ?: throw GradleException("Cannot find VDM package task")
         vdmPackageTask.dependsOn(typeCheckTests)
         val assembleTask = project.tasks.getByName(LifecycleBasePlugin.ASSEMBLE_TASK_NAME)
-                ?: throw TaskInstantiationException("Cannot find assemble task")
+                ?: throw GradleException("Cannot find assemble task")
         assembleTask.dependsOn(vdmPackage)
     }
 }

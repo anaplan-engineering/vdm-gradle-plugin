@@ -21,6 +21,7 @@
  */
 package com.anaplan.engineering.vdmgradleplugin
 
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -174,16 +175,13 @@ internal fun Project.loadSpecification(specificationFiles: List<File>, typeCheck
     val controller = dialect.createController()
     val parseStatus = controller.parse(specificationFiles)
     if (parseStatus != ExitStatus.EXIT_OK) {
-        throw VdmParseException("VDM specification cannot be parsed")
+        throw GradleException("VDM specification cannot be parsed")
     }
     if (typeCheck) {
         val typeCheckStatus = controller.typeCheck()
         if (typeCheckStatus != ExitStatus.EXIT_OK) {
-            throw VdmTypeCheckException("VDM specification does not type check")
+            throw GradleException("VDM specification does not type check")
         }
     }
     return controller.getInterpreter()
 }
-
-class VdmParseException(msg: String? = null) : Exception(msg)
-class VdmTypeCheckException(msg: String? = null) : Exception(msg)
