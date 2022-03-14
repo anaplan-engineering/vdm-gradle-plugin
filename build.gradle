@@ -1,15 +1,13 @@
 plugins {
     id "org.jetbrains.kotlin.jvm" version "1.5.31"
+    id 'java-gradle-plugin'
+    id 'maven-publish'
 }
 
 group = 'com.anaplan.engineering'
 version = '3.0.2'
 
-apply plugin: 'java-gradle-plugin'
-apply plugin: 'maven-publish'
-
 ext {
-    kotlinVersion = "1.5.31"
     overtureVersion = "3.0.2"
 }
 
@@ -43,8 +41,10 @@ configurations {
 
 dependencies {
     implementation gradleApi()
-    implementation group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlinVersion
-    implementation group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: kotlinVersion
+
+    implementation platform('org.jetbrains.kotlin:kotlin-bom')
+    implementation group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib'
+    implementation group: 'org.jetbrains.kotlin', name: 'kotlin-reflect'
     implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-html-jvm', version: '0.7.3'
 
     implementation group: 'org.overturetool.core', name: 'interpreter', version: overtureVersion
