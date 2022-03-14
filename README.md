@@ -85,7 +85,9 @@ The tasks that the plugin makes available are described in [tasks](#tasks) below
 The behaviour of the plugin can be customized by adding additional configuration to the `build.gradle` file. The options available are described in [configuration](#configuration) below. 
 
 ### Publishing artifacts
-It is trivial to instruct Gradle to publish the specification to a Maven-formatted artifact repository using the maven-publish plugin. The vdm-gradle-plugin will automatically mark artifacts — according to the [configuration](#configuration)— for publishing when the maven-publish plugin has been applied to the project. 
+It is trivial to instruct Gradle to publish the specification to a Maven-formatted artifact repository using the
+maven-publish plugin. The vdm-gradle-plugin will automatically mark artifacts—according to
+the [configuration](#configuration)—for publishing when the maven-publish plugin has been applied to the project.
 
 For example, given the following build.gradle file.
  
