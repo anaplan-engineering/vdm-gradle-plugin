@@ -389,7 +389,6 @@ private enum class ExpectedTestResult(val description: String) {
     failedInvariant("invariant failure")
 }
 
-// ideally this would be done through an annotation, but this is not feasible currently
 private fun getExpectedResult(testName: String): ExpectedTestResult =
     when {
         testName.contains("expectpreconditionfailure", ignoreCase = true) -> ExpectedTestResult.failedPrecondition
