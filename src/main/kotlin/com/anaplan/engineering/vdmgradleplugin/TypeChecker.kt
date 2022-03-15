@@ -21,11 +21,13 @@
  */
 package com.anaplan.engineering.vdmgradleplugin
 
-import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
+import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.*
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.OutputStream
 
 const val typeCheck = "typeCheck"
 const val typeCheckTests = "typeCheckTests"
@@ -46,39 +48,43 @@ open class VdmTypeCheckTestTask() : VdmTypeCheckTask(true)
 
 open class VdmTypeCheckTask(private val includeTests: Boolean) : OvertureTask() {
 
-    val specificationFiles: FileCollection
+    private val specificationFiles: FileCollection
         @PathSensitive(PathSensitivity.RELATIVE)
         @InputFiles
         get() = project.locateAllSpecifications(dialect, includeTests)
 
     // Only needed to ensure caching of the Gradle task
-    val statusFile: File
+    private val logFile: File
         @OutputFile
-        get() = File(project.vdmBuildDir, "typeCheckStatus.log")
+        get() = File(project.vdmBuildDir, "typeCheckTask.log")
 
     override fun exec() {
         logger.info("VDM dialect: $dialect")
         if (specificationFiles.isEmpty) {
             logger.info("No files found")
         } else {
+            standardOutput = ByteArrayOutputStream()
             jvmArgs = project.vdmConfig.overtureJvmArgs
-            super.setArgs(constructArgs())
-            super.setClasspath(project.files(createClassPathJar()))
+            setArgs(constructArgs())
+            classpath = project.files(createClassPathJar())
             super.exec()
-            writeStatus()
+            writeOutput(standardOutput)
         }
     }
 
-    private fun writeStatus() {
-        val exitStatus = super.getExecutionResult().get().exitValue
-        statusFile.writeText(when (exitStatus) {
-            0 -> "Success"
-            1 -> "FailingTests"
-            2 -> "UnexpectedDialect"
-            3 -> "ParseFailed"
-            4 -> "TypeCheckFailed"
-            else -> throw GradleException("Unknown exit status of OvertureWrapper: $exitStatus")
-        })
+    private fun writeOutput(os: OutputStream) {
+        val output = os.toString()
+        logFile.writeText(output)
+        output.lineSequence().forEach {
+            logger.log(getLogLevel(it), it)
+        }
+    }
+
+    private fun getLogLevel(line: String) = when {
+        line.startsWith("Error") -> LogLevel.ERROR
+        line.startsWith("Warning") -> LogLevel.WARN
+        line.startsWith("Parsed") || line.startsWith("Type checked") -> LogLevel.INFO
+        else -> LogLevel.LIFECYCLE
     }
 
     private fun constructArgs() =
