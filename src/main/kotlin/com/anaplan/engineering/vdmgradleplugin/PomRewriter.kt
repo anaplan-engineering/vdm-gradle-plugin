@@ -27,6 +27,7 @@ import org.w3c.dom.NodeList
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileWriter
+import java.nio.file.Path
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.transform.OutputKeys
 import javax.xml.transform.TransformerFactory
@@ -36,13 +37,6 @@ import javax.xml.xpath.XPathConstants
 import javax.xml.xpath.XPathFactory
 
 class PomRewriter(val file: File) {
-
-    internal fun readDocument(): Document {
-        val fileInputStream = FileInputStream(file)
-        val builder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-        return builder.parse(fileInputStream)
-    }
-
 
     private fun writeDocument(document: Document) {
         val domSource = DOMSource(document)
@@ -85,7 +79,7 @@ class PomRewriter(val file: File) {
     }
 
     fun addDependencies(dependencies: List<Dependency>) {
-        val document = readDocument()
+        val document = XmlHelper.readDocument(file)
         val dependenciesNode = getUniqueNode("/project/dependencies", document) ?: addDependenciesNode(document)
         dependencies.forEach { dependency ->
             val dependencyNode = document.createElement("dependency")
@@ -108,4 +102,16 @@ class PomRewriter(val file: File) {
             val type: String? = null,
             val scope: String?
     )
+}
+
+internal object XmlHelper {
+    fun readDocument(file: File): Document {
+        val stream = FileInputStream(file)
+        val builder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+        return builder.parse(stream)
+    }
+
+    fun readDocument(path: Path) = readDocument(path.toFile())
+
+    fun normalizeDocument(path: Path) = readDocument(path).normalizeDocument()
 }

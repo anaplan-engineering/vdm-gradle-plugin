@@ -23,13 +23,8 @@ package com.anaplan.engineering.vdmgradleplugin
 
 import org.junit.Assert
 import org.junit.Test
-import org.w3c.dom.Document
-import java.io.File
-import java.io.FileInputStream
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
-import javax.xml.parsers.DocumentBuilderFactory
 
 class PomRewriterTest {
 
@@ -59,17 +54,4 @@ class PomRewriterTest {
                 XmlHelper.normalizeDocument(sourceFileCopy)
         )
     }
-
-    private object XmlHelper {
-        fun readDocument(file: File): Document {
-            val stream = FileInputStream(file)
-            val builder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-            return builder.parse(stream)
-        }
-
-        fun readDocument(path: Path) = readDocument(path.toFile())
-
-        fun normalizeDocument(path: Path) = readDocument(path).normalizeDocument()
-    }
-
 }
