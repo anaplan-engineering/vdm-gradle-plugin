@@ -45,7 +45,9 @@ import org.overture.ast.definitions.AValueDefinition
 import org.overture.ast.definitions.PDefinition
 import org.overture.ast.modules.AModuleModules
 import org.overture.ast.node.INode
+import org.overture.interpreter.runtime.Interpreter
 import org.overture.interpreter.runtime.ModuleInterpreter
+import org.overture.interpreter.util.ExitStatus
 import org.overture.parser.util.ParserUtil
 import java.io.File
 import java.nio.file.FileVisitResult
@@ -134,7 +136,7 @@ open class DocGenTask : DefaultTask() {
             logger.info("Skipping as doc generation only defined for VDM-SL currently")
             return
         }
-        val interpreter = project.loadSpecification(specificationFiles) as? ModuleInterpreter
+        val interpreter = loadSpecification(specificationFiles) as? ModuleInterpreter
                 ?: // this should never happen as we have limited dialect to VDM-SL
                 throw GradleException("Interpreter is not a container interpreter!")
 
@@ -156,6 +158,22 @@ open class DocGenTask : DefaultTask() {
         generateModuleAppendix("Test modules", interpreter.modules.filter(isTestModule), sharedFiles.testModulesDirectory, sharedFiles.cssFile)
 
         copyAdditionalResources(resourceFiles, project.vdmMdDir, vdmGenDocsDir)
+    }
+
+    private fun loadSpecification(specificationFiles: List<File>, typeCheck: Boolean = false): Interpreter {
+        val dialect = project.vdmConfig.dialect
+        val controller = dialect.createController()
+        val parseStatus = controller.parse(specificationFiles)
+        if (parseStatus != ExitStatus.EXIT_OK) {
+            throw GradleException("VDM specification cannot be parsed")
+        }
+        if (typeCheck) {
+            val typeCheckStatus = controller.typeCheck()
+            if (typeCheckStatus != ExitStatus.EXIT_OK) {
+                throw GradleException("VDM specification does not type check")
+            }
+        }
+        return controller.getInterpreter()
     }
 
     private fun copyAdditionalResources(

@@ -21,12 +21,9 @@
  */
 package com.anaplan.engineering.vdmgradleplugin
 
-import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.overture.interpreter.runtime.Interpreter
-import org.overture.interpreter.util.ExitStatus
 import java.io.File
 import java.io.IOException
 import java.nio.file.*
@@ -168,20 +165,4 @@ internal fun deleteDirectory(directory: File) {
         }
     }
     Files.walkFileTree(directory.toPath(), fileVisitor)
-}
-
-internal fun Project.loadSpecification(specificationFiles: List<File>, typeCheck: Boolean = false): Interpreter {
-    val dialect = project.vdmConfig.dialect
-    val controller = dialect.createController()
-    val parseStatus = controller.parse(specificationFiles)
-    if (parseStatus != ExitStatus.EXIT_OK) {
-        throw GradleException("VDM specification cannot be parsed")
-    }
-    if (typeCheck) {
-        val typeCheckStatus = controller.typeCheck()
-        if (typeCheckStatus != ExitStatus.EXIT_OK) {
-            throw GradleException("VDM specification does not type check")
-        }
-    }
-    return controller.getInterpreter()
 }
