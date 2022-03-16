@@ -28,16 +28,16 @@ import org.overture.interpreter.runtime.ModuleInterpreter
 import java.io.File
 
 internal class CoverageRecorder(
-        private val sourceDir: File?,
-        private val coverageDir: File,
-        private val logger: Logger
+    private val sourceDir: File?,
+    private val coverageDir: File,
+    private val logger: Logger
 ) {
 
     internal fun recordCoverage(interpreter: ModuleInterpreter) {
         val coverageByFile = generateCoverage(interpreter)
-        val totalLocations = coverageByFile.sumBy { it.coverage.size }
+        val totalLocations = coverageByFile.sumOf { it.coverage.size }
         if (totalLocations > 0) {
-            val coveredLocations = coverageByFile.sumBy { it.coverage.filter { (_, v) -> v > 0L }.count() }
+            val coveredLocations = coverageByFile.sumOf { it.coverage.filter { (_, v) -> v > 0L }.count() }
             val coverage = if (totalLocations == 0) 100.0 else 100.0 * coveredLocations / totalLocations
             logger.info("COVERAGE -- %2.2f%%".format(coverage))
 
@@ -50,8 +50,10 @@ internal class CoverageRecorder(
         }
     }
 
-    private fun generateCoverageStats(coverageByFile: List<FileCoverage>, overallCoveredLocations: Int,
-                                      overallTotalLocations: Int, overallCoverage: Double) {
+    private fun generateCoverageStats(
+        coverageByFile: List<FileCoverage>, overallCoveredLocations: Int,
+        overallTotalLocations: Int, overallCoverage: Double
+    ) {
         val reportFile = File(coverageDir, "report.html")
         val cellStyle = "border: 1px solid lightgray; padding: 10px"
         val html = buildString {
@@ -121,14 +123,15 @@ internal class CoverageRecorder(
     }
 
     private fun generateCoverage(interpreter: ModuleInterpreter) =
-            interpreter.modules.filter { sourceDir == null || it.files.all { it.startsWith(sourceDir) } }.flatMap { module ->
+        interpreter.modules.filter { sourceDir == null || it.files.all { it.startsWith(sourceDir) } }
+            .flatMap { module ->
                 module.files.map { file ->
                     val locationCoverage = LexLocation.getSourceLocations(file).map { location ->
                         Location(
-                                location.startLine,
-                                location.startPos,
-                                location.endLine,
-                                location.endPos
+                            location.startLine,
+                            location.startPos,
+                            location.endLine,
+                            location.endPos
                         ) to location.hits
                     }.toMap()
                     FileCoverage(file, module.name.name, file.readText(), locationCoverage)
@@ -136,9 +139,9 @@ internal class CoverageRecorder(
             }
 
     private fun escape(text: String) =
-            text
-                    .replace("<", "&lt;")
-                    .replace(">", "&gt;")
+        text
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
 
     private fun generateCoverageHtml(fileCoverage: FileCoverage): String {
         val lines = fileCoverage.text.lines()
@@ -190,17 +193,17 @@ internal class CoverageRecorder(
     }
 
     private data class FileCoverage(
-            val file: File,
-            val moduleName: String,
-            val text: String,
-            val coverage: Map<Location, Long>
+        val file: File,
+        val moduleName: String,
+        val text: String,
+        val coverage: Map<Location, Long>
     )
 
     private data class Location(
-            val startLine: Int,
-            val startPos: Int,
-            val endLine: Int,
-            val endPos: Int
+        val startLine: Int,
+        val startPos: Int,
+        val endLine: Int,
+        val endPos: Int
     )
 
     companion object {

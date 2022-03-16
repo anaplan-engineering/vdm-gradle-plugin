@@ -11,9 +11,10 @@ class CoverageTest {
     fun coverageTest() {
         val dir = File(javaClass.getResource("/coverageTest").toURI())
         executeBuild(
-                projectDir = dir,
-                tasks = arrayOf("test"),
-                fail = false)
+            projectDir = dir,
+            tasks = arrayOf("test"),
+            fail = false
+        )
         val coverageFile = File(dir, "build/vdm/coverage/Main.html")
         Assert.assertTrue(coverageFile.exists())
         val expectedHtml = File(javaClass.getResource("/coverageTest/expected.html").toURI())
@@ -24,9 +25,10 @@ class CoverageTest {
     fun noCoverageTest() {
         val dir = File(javaClass.getResource("/noCoverageTest").toURI())
         executeBuild(
-                projectDir = dir,
-                tasks = arrayOf("test"),
-                fail = false)
+            projectDir = dir,
+            tasks = arrayOf("test"),
+            fail = false
+        )
         val coverageFile = File(dir, "build/vdm/coverage/Main.html")
         Assert.assertFalse(coverageFile.exists())
     }

@@ -1,0 +1,19 @@
+buildscript {
+    dependencies {
+        classpath files("%functionalTestClasspath.jar%")
+    }
+}
+
+subprojects {
+    buildscript {
+        dependencies {
+            classpath files("%functionalTestClasspath.jar%")
+        }
+    }
+
+    apply plugin: 'vdm'
+
+    group "com.acme"
+    version "1.0"
+}
+

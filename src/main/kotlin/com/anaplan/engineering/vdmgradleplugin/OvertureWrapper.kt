@@ -7,19 +7,23 @@ import org.overture.ast.definitions.SOperationDefinition
 import org.overture.interpreter.runtime.ContextException
 import org.overture.interpreter.runtime.Interpreter
 import org.overture.interpreter.runtime.ModuleInterpreter
+import org.overture.interpreter.util.ExitStatus
 import java.io.File
 import java.io.PrintStream
 import java.net.InetAddress
 import java.nio.file.Files
+import java.text.CharacterIterator
+import java.text.StringCharacterIterator
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.system.exitProcess
+
 
 internal val timestampFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
 fun main(args: Array<String>) {
     try {
-        ForkedTestRunner(ArgParser(args)).runTests()
+        OvertureWrapper(ArgParser(args)).run()
     } catch (e: SystemExitException) {
         e.printAndExit()
     }
@@ -55,14 +59,21 @@ internal enum class GradleLogLevel(val level: Int) {
 }
 
 /**
- * This class is used to run VDM tests in a separate JVM and is invoked using main method above.
+ * This class is used to call Overture in its own JVM and is invoked using main method above.
+ * This is necessary as Overture maintains static state.
  */
 // TODO - generic test runner could be extracted to a separate project
-class ForkedTestRunner(parser: ArgParser) {
+class OvertureWrapper(parser: ArgParser) {
 
     private val logLevel by parser.storing("The logging level") {
         GradleLogLevel.valueOf(this)
     }.default(GradleLogLevel.ERROR)
+
+    private val runTests by parser.storing("Should run tests") {
+        this.toBoolean()
+    }.default(false)
+
+    private val testFilter by parser.storing("Test filter").default("Test.*")
 
     private val dialect by parser.storing("The VDM dialect") {
         Dialect.valueOf(this)
@@ -74,7 +85,7 @@ class ForkedTestRunner(parser: ArgParser) {
 
     private val reportTargetDir by parser.storing("Directory to write test reports") {
         File(this)
-    }
+    }.default { null }
 
     private val launchTargetDir by parser.storing("Directory to write generated test launch files") {
         File(this)
@@ -98,14 +109,61 @@ class ForkedTestRunner(parser: ArgParser) {
         File(this)
     }
 
+    private val monitorMemory by parser.storing("Regularly log memory reserved by the Overture process") {
+        this.toBoolean()
+    }.default(false)
+
     private val logger = Logger(logLevel)
 
-    fun runTests() {
-        if (dialect != Dialect.vdmsl) {
-            logger.error("Test running only defined for VDM-SL currently")
-            exitProcess(1)
+    private class Monitor(private val logLevel: GradleLogLevel) : Thread() {
+
+        init {
+            isDaemon = true
+        }
+
+        private val logger = Logger(logLevel)
+
+        fun humanReadableByteCountBin(bytes: Long): String? {
+            val absB = if (bytes == Long.MIN_VALUE) Long.MAX_VALUE else Math.abs(bytes)
+            if (absB < 1024) {
+                return "$bytes B"
+            }
+            var value = absB
+            val ci: CharacterIterator = StringCharacterIterator("KMGTPE")
+            var i = 40
+            while (i >= 0 && absB > 0xfffccccccccccccL shr i) {
+                value = value shr 10
+                ci.next()
+                i -= 10
+            }
+            value *= java.lang.Long.signum(bytes).toLong()
+            return String.format("%.1f %ciB", value / 1024.0, ci.current())
+        }
+
+        override fun run() {
+            while (true) {
+                sleep(10000)
+                val mem = humanReadableByteCountBin(Runtime.getRuntime().totalMemory())
+                logger.info("Memory reserved by Overture fork: $mem")
+            }
+        }
+    }
+
+    fun run() {
+        if (monitorMemory) {
+            Monitor(logLevel).start()
         }
         val interpreter = loadSpecification()
+        if (runTests) {
+            if (dialect != Dialect.vdmsl) {
+                logger.error("Test running only defined for VDM-SL currently")
+                exitProcess(ExitCodes.UnexpectedDialect)
+            }
+            runTests(interpreter as ModuleInterpreter)
+        }
+    }
+
+    private fun runTests(interpreter: ModuleInterpreter) {
         val testSuites = collectTests(interpreter)
         val testResults = TestRunner(interpreter, logger).run(testSuites)
         saveFormattedResults(testResults)
@@ -118,7 +176,7 @@ class ForkedTestRunner(parser: ArgParser) {
 
         if (!testResults.all { it.succeeded }) {
             logger.error("There were failing tests")
-            exitProcess(1)
+            exitProcess(ExitCodes.FailingTests)
         }
     }
 
@@ -194,41 +252,60 @@ class ForkedTestRunner(parser: ArgParser) {
 
     private fun logTestResults(testResults: List<TestSuiteResult>) {
         if (testResults.all { it.succeeded }) {
-            logger.info("SUCCESS -- ${testResults.sumBy { it.testCount }} tests passed")
+            logger.info("SUCCESS -- ${testResults.sumOf { it.testCount }} tests passed")
         } else {
-            logger.info("FAILURE -- ${testResults.sumBy { it.failCount }} tests failed, ${testResults.sumBy { it.errorCount }} tests had errors [${testResults.sumBy { it.testCount }} tests were run]")
+            logger.info("FAILURE -- ${testResults.sumOf { it.failCount }} tests failed, ${testResults.sumOf { it.errorCount }} tests had errors [${testResults.sumOf { it.testCount }} tests were run]")
         }
     }
 
-    private fun loadSpecification(): ModuleInterpreter {
+    object ExitCodes {
+        val FailingTests = 1
+        val UnexpectedDialect = 2
+        val ParseFailed = 3
+        val TypeCheckFailed = 4
+    }
+
+    private fun loadSpecification(): Interpreter {
         // For coverage we need to reparse to correctly identify lex locations in files
         val controller = dialect.createController()
-        controller.parse(specificationFiles)
-        controller.typeCheck()
-        return controller.getInterpreter() as? ModuleInterpreter
-        // this should never happen as we have limited dialect to VDM-SL
-                ?: exitProcess(2)
+        val parseStatus = controller.parse(specificationFiles)
+        if (parseStatus != ExitStatus.EXIT_OK) {
+            exitProcess(ExitCodes.ParseFailed)
+        }
+        val typeCheckStatus = controller.typeCheck()
+        if (typeCheckStatus != ExitStatus.EXIT_OK) {
+            exitProcess(ExitCodes.TypeCheckFailed)
+        }
+        return controller.getInterpreter()
     }
 
     private fun collectTests(interpreter: ModuleInterpreter): List<TestSuite> {
+        val filterRegex = Regex(testFilter)
         val testModules = interpreter.modules.filter { module ->
             module.files.all { testSourceDir == null || it.startsWith(testSourceDir!!) } &&
-                    module.name.name.startsWith("Test")
+                module.name.name.startsWith("Test")
         }
         return testModules.map { module ->
             val operationDefs = module.defs.filter { it is SOperationDefinition }.map { it as SOperationDefinition }
             // TODO - should check that operation has zero params
-            val testNames = operationDefs.filter { it.name.name.startsWith("Test") }.map { it.name.name }
+            val testNames = operationDefs.filter { filterRegex.matches(it.name.name) }.map { it.name.name }
             TestSuite(module.name.name, testNames)
         }
     }
 
     private fun saveFormattedResults(testSuiteResults: List<TestSuiteResult>) {
-        if (reportTargetDir.exists()) {
-            deleteDirectory(reportTargetDir)
+        val reportDir = if (reportTargetDir == null) {
+            logger.error("Asked to run tests, but no report directory specified")
+            exitProcess(1)
+        } else {
+            reportTargetDir!!
         }
-        reportTargetDir.mkdirs()
-        testSuiteResults.forEach { saveFormattedResults(it, reportTargetDir) }
+
+        if (reportDir.exists()) {
+            deleteDirectory(reportDir)
+        }
+        reportDir.mkdirs()
+        testSuiteResults.forEach { saveFormattedResults(it, reportDir) }
     }
 
     private fun saveFormattedResults(testSuiteResult: TestSuiteResult, reportDir: File) {
@@ -266,8 +343,8 @@ class ForkedTestRunner(parser: ArgParser) {
 }
 
 private data class TestSuite(
-        val moduleName: String,
-        val testNames: List<String>
+    val moduleName: String,
+    val testNames: List<String>
 )
 
 private enum class TestResultState {
@@ -277,16 +354,16 @@ private enum class TestResultState {
 }
 
 private data class TestResult(
-        val testName: String,
-        val duration: Long,
-        val state: TestResultState,
-        val message: String? = null
+    val testName: String,
+    val duration: Long,
+    val state: TestResultState,
+    val message: String? = null
 )
 
 private data class TestSuiteResult(
-        val moduleName: String,
-        val timestamp: LocalDateTime,
-        val testResults: List<TestResult>
+    val moduleName: String,
+    val timestamp: LocalDateTime,
+    val testResults: List<TestResult>
 ) {
     val errorCount: Int by lazy {
         testResults.count { it.state == TestResultState.ERROR }
@@ -298,20 +375,11 @@ private data class TestSuiteResult(
         testResults.size
     }
     val duration: Long by lazy {
-        testResults.sumByLong { it.duration }
+        testResults.sumOf { it.duration }
     }
     val succeeded: Boolean by lazy {
         testResults.all { it.state == TestResultState.PASS }
     }
-}
-
-// copies _Collections.sumBy for long
-private inline fun <T> Iterable<T>.sumByLong(selector: (T) -> Long): Long {
-    var sum: Long = 0
-    for (element in this) {
-        sum += selector(element)
-    }
-    return sum
 }
 
 private enum class ExpectedTestResult(val description: String) {
@@ -321,19 +389,13 @@ private enum class ExpectedTestResult(val description: String) {
     failedInvariant("invariant failure")
 }
 
-// ideally this would be done through an annotation, but this is not feasible currently
-private fun getExpectedResult(testName: String): ExpectedTestResult {
-    val testNameLower = testName.toLowerCase()
-    return if (testNameLower.toLowerCase().contains("expectpreconditionfailure")) {
-        ExpectedTestResult.failedPrecondition
-    } else if (testNameLower.contains("expectpostconditionfailure")) {
-        ExpectedTestResult.failedPostcondition
-    } else if (testNameLower.contains("expectinvariantfailure")) {
-        ExpectedTestResult.failedInvariant
-    } else {
-        ExpectedTestResult.success
+private fun getExpectedResult(testName: String): ExpectedTestResult =
+    when {
+        testName.contains("expectpreconditionfailure", ignoreCase = true) -> ExpectedTestResult.failedPrecondition
+        testName.contains("expectpostconditionfailure", ignoreCase = true) -> ExpectedTestResult.failedPostcondition
+        testName.contains("expectinvariantfailure", ignoreCase = true) -> ExpectedTestResult.failedInvariant
+        else -> ExpectedTestResult.success
     }
-}
 
 private val preconditionFailureCodes = setOf(4055, 4071)
 private val postconditionFailureCodes = setOf(4056, 4072)
@@ -341,7 +403,7 @@ private val invariantFailureCodes = setOf(4060, 4079, 4082)
 
 private class TestRunner(private val interpreter: Interpreter, private val logger: Logger) {
 
-    internal fun run(testSuites: List<TestSuite>): List<TestSuiteResult> {
+    fun run(testSuites: List<TestSuite>): List<TestSuiteResult> {
         interpreter.init(null)
         val timestamp = LocalDateTime.now()
         return testSuites.map { run(it, timestamp) }

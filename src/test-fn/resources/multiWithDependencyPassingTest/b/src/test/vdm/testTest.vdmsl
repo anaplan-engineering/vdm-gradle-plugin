@@ -1,0 +1,23 @@
+module TestTestB
+imports
+  from MainA
+    values
+      x,
+  from MainB
+    values
+      y
+
+definitions
+
+functions
+
+  Add:nat * nat -> nat
+  Add(a,b) == a + b
+
+operations
+
+  TestAdd:() ==> nat
+  TestAdd() == Add(MainA`x,MainB`y)
+  post RESULT = 2;
+
+end TestTestB

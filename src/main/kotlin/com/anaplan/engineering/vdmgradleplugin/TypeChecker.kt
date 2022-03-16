@@ -21,16 +21,13 @@
  */
 package com.anaplan.engineering.vdmgradleplugin
 
-import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
-import org.overture.interpreter.util.ExitStatus
+import org.gradle.api.logging.LogLevel
+import org.gradle.api.tasks.*
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.OutputStream
 
 const val typeCheck = "typeCheck"
 const val typeCheckTests = "typeCheckTests"
@@ -39,63 +36,65 @@ internal fun Project.addTypeCheckTasks() {
     createVdmTask(typeCheck, VdmTypeCheckMainTask::class.java)
     createVdmTask(typeCheckTests, VdmTypeCheckTestTask::class.java)
     afterEvaluate {
-        it.tasks.matching { it.name == typeCheck || it.name == typeCheckTests }.forEach { it.dependsOn(dependencyUnpack) }
+        it.tasks.matching { it.name == typeCheck || it.name == typeCheckTests }
+            .forEach { it.dependsOn(dependencyUnpack) }
     }
 }
 
+@CacheableTask
 open class VdmTypeCheckMainTask() : VdmTypeCheckTask(false)
 
+@CacheableTask
 open class VdmTypeCheckTestTask() : VdmTypeCheckTask(true)
 
-open class VdmTypeCheckTask(private val includeTests: Boolean) : DefaultTask() {
+open class VdmTypeCheckTask(private val includeTests: Boolean) : OvertureTask() {
 
-    val dialect: Dialect
-        @Input
-        get() = project.vdmConfig.dialect
-
-    val specificationFiles: FileCollection
+    private val specificationFiles: FileCollection
+        @PathSensitive(PathSensitivity.RELATIVE)
         @InputFiles
         get() = project.locateAllSpecifications(dialect, includeTests)
 
-    val generatedLibFile: File
+    // Only needed to ensure caching of the Gradle task
+    private val logFile: File
         @OutputFile
-        get() = project.generatedLibFile
+        get() = File(project.vdmBuildDir, "typeCheckTask.log")
 
-    /*
-    Various strategies have been attempted here to make use of binaries and to split out the parse phase from the type
-    check phase, but Overture doesn't really help.
-
-    We should look to implement the following in Overture and then revisit:
-    - produce non-type checked binary format (for parse phase)
-    - do not include loaded libs when writing out binary (otherwise we have transitive issues) so that we can:
-        * store main and test in separate libs
-        * publish and depend upon libs
-
-     If we try and create a binary for the main and then load that in test we get false warnings of duplicate declarations.
-     These become very distracting and obfuscate real issues, so we have reverted to starting from scratch in each task.
-     */
-    @TaskAction
-    fun typeCheck() {
+    override fun exec() {
         logger.info("VDM dialect: $dialect")
-
-        val controller = dialect.createController()
-
-        logger.debug("Specification files found: ")
-        specificationFiles.forEach { logger.debug(" * $it") }
-
-        if (!generatedLibFile.parentFile.exists()) {
-            generatedLibFile.parentFile.mkdirs()
-        }
-        controller.setOutfile(generatedLibFile.absolutePath)
-
-        val parseStatus = controller.parse(specificationFiles.toList())
-        if (parseStatus != ExitStatus.EXIT_OK) {
-            throw GradleException("VDM parse failed")
-        }
-        val typeCheckStatus = controller.typeCheck()
-        if (typeCheckStatus != ExitStatus.EXIT_OK) {
-            throw GradleException("VDM type check failed")
+        if (specificationFiles.isEmpty) {
+            logger.info("No files found")
+        } else {
+            standardOutput = ByteArrayOutputStream()
+            jvmArgs = project.vdmConfig.overtureJvmArgs
+            setArgs(constructArgs())
+            classpath = project.files(createClassPathJar())
+            super.exec()
+            writeOutput(standardOutput)
         }
     }
+
+    private fun writeOutput(os: OutputStream) {
+        val output = os.toString()
+        logFile.writeText(output)
+        output.lineSequence().forEach {
+            logger.log(getLogLevel(it), it)
+        }
+    }
+
+    private fun getLogLevel(line: String) = when {
+        line.startsWith("Error") -> LogLevel.ERROR
+        line.startsWith("Warning") -> LogLevel.WARN
+        line.startsWith("Parsed") || line.startsWith("Type checked") -> LogLevel.INFO
+        else -> LogLevel.LIFECYCLE
+    }
+
+    private fun constructArgs() =
+        listOf(
+            "--dialect", dialect.name,
+            "--log-level", project.gradle.startParameter.logLevel,
+            "--run-tests", false,
+            "--monitor-memory", project.vdmConfig.monitorOvertureMemory
+        ) + specificationFiles.map { it.absolutePath }
+
 }
 

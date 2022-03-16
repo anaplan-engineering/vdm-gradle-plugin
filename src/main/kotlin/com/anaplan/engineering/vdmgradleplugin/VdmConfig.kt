@@ -36,6 +36,8 @@ open class VdmConfigExtension @javax.inject.Inject constructor(objectFactory: Ob
     var resourceFileTypes: Array<String> = arrayOf("svg", "png", "gif")
     var autoDocGeneration: Boolean = true
     var recordCoverage: Boolean = false
+    var overtureJvmArgs: List<String> = listOf()
+    var monitorOvertureMemory: Boolean = false
     var testLaunchGeneration: TestLaunchGeneration = TestLaunchGeneration.FAILING
 
     fun packaging(action: Action<Packaging>) {
@@ -72,8 +74,8 @@ open class PrettyPrinterConfig @javax.inject.Inject constructor(@Suppress("UNUSE
     var minListLengthToUseNls: Int = 5
 
     fun toConfig() = PrettyPrintConfig(
-            logUnhandledCases = logUnhandledCases,
-            minListLengthToUseNls = minListLengthToUseNls
+        logUnhandledCases = logUnhandledCases,
+        minListLengthToUseNls = minListLengthToUseNls
     )
 }
 

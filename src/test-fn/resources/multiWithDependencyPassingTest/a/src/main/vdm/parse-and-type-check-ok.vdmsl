@@ -1,0 +1,10 @@
+module MainA
+exports all
+
+definitions
+
+values
+
+x : nat = 1
+
+end MainA

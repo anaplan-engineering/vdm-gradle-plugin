@@ -26,8 +26,8 @@ repositories {
 apply plugin: 'vdm'
 
 dependencies {
-  vdm group: 'testing', name: 'b', version: '1.0.0'
-  vdm (group: 'testing', name: 'c', version: '1.0.0') {
-      exclude group: 'testing', module: 'a'
-  }
+    vdm group: 'testing', name: 'b', version: '1.0.0'
+    vdm(group: 'testing', name: 'c', version: '1.0.0') {
+        exclude group: 'testing', module: 'a'
+    }
 }

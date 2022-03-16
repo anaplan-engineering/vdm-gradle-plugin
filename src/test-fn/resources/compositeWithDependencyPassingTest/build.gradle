@@ -1,0 +1,8 @@
+tasks.register("clean") {
+    dependsOn(gradle.includedBuild("a").task(":clean"))
+    dependsOn(gradle.includedBuild("b").task(":clean"))
+}
+tasks.register("test") {
+    dependsOn(gradle.includedBuild("a").task(":test"))
+    dependsOn(gradle.includedBuild("b").task(":test"))
+}

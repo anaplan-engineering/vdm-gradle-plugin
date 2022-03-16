@@ -45,7 +45,9 @@ import org.overture.ast.definitions.AValueDefinition
 import org.overture.ast.definitions.PDefinition
 import org.overture.ast.modules.AModuleModules
 import org.overture.ast.node.INode
+import org.overture.interpreter.runtime.Interpreter
 import org.overture.interpreter.runtime.ModuleInterpreter
+import org.overture.interpreter.util.ExitStatus
 import org.overture.parser.util.ParserUtil
 import java.io.File
 import java.nio.file.FileVisitResult
@@ -66,32 +68,37 @@ internal fun Project.addDocGenTask() {
 
 private val prettyPrinter = VdmPrettyPrinter(MathematicalUnicodeHtmlRenderStrategy(header = "", footer = ""))
 
+@CacheableTask
 open class DocGenTask : DefaultTask() {
 
     val dialect: Dialect
         @Input
         get() = project.vdmConfig.dialect
 
-    val generatedLibFile: File
-        @InputFile
-        get() = project.generatedLibFile
+    val specificationFiles: List<File>
+        @PathSensitive(PathSensitivity.RELATIVE)
+        @InputFiles
+        get() = project.locateAllSpecifications(dialect, true).map { File(it.absolutePath) }
 
     val vdmGenDocsDir: File
         @OutputDirectory
         get() = project.vdmGenDocsDir
 
     private val resourceTypes
-            get() = project.vdmConfig.resourceFileTypes
+        get() = project.vdmConfig.resourceFileTypes
 
     val resourceFiles: FileCollection
+        @PathSensitive(PathSensitivity.RELATIVE)
         @InputFiles
         get() = project.files(locateFilesWithExtension(project.vdmMdDir, *resourceTypes))
 
     val mdSourceFiles: FileCollection
+        @PathSensitive(PathSensitivity.RELATIVE)
         @InputFiles
         get() = project.files(locateFilesWithExtension(project.vdmMdDir, "md"))
 
     val mdDependencies: FileCollection
+        @PathSensitive(PathSensitivity.RELATIVE)
         @InputFiles
         get() = project.files(locateFilesWithExtension(project.vdmMdDependencyDir, "md", *resourceTypes))
 
@@ -129,14 +136,14 @@ open class DocGenTask : DefaultTask() {
             logger.info("Skipping as doc generation only defined for VDM-SL currently")
             return
         }
-        val interpreter = project.loadBinarySpecification(generatedLibFile) as? ModuleInterpreter
-                ?: // this should never happen as we have limited dialect to VDM-SL
-                throw GradleException("Interpreter is not a container interpreter!")
+        val interpreter = loadSpecification(specificationFiles) as? ModuleInterpreter
+            ?: // this should never happen as we have limited dialect to VDM-SL
+            throw GradleException("Interpreter is not a container interpreter!")
 
         val sharedFiles = SharedFiles(
-                cssFile = createCssFile(),
-                modulesDirectory = File(vdmGenDocsDir, "modules"),
-                testModulesDirectory = File(vdmGenDocsDir, "testModules")
+            cssFile = createCssFile(),
+            modulesDirectory = File(vdmGenDocsDir, "modules"),
+            testModulesDirectory = File(vdmGenDocsDir, "testModules")
         )
         processMarkdownFiles(interpreter, sharedFiles, project.vdmMdDir, vdmGenDocsDir)
         if (project.vdmMdDependencyDir.exists()) {
@@ -147,16 +154,42 @@ open class DocGenTask : DefaultTask() {
                 copyAdditionalResources(resourceFiles, dependencyDir, targetDir)
             }
         }
-        generateModuleAppendix("Modules", interpreter.modules.filter(isMainModule), sharedFiles.modulesDirectory, sharedFiles.cssFile)
-        generateModuleAppendix("Test modules", interpreter.modules.filter(isTestModule), sharedFiles.testModulesDirectory, sharedFiles.cssFile)
+        generateModuleAppendix(
+            "Modules",
+            interpreter.modules.filter(isMainModule),
+            sharedFiles.modulesDirectory,
+            sharedFiles.cssFile
+        )
+        generateModuleAppendix(
+            "Test modules",
+            interpreter.modules.filter(isTestModule),
+            sharedFiles.testModulesDirectory,
+            sharedFiles.cssFile
+        )
 
         copyAdditionalResources(resourceFiles, project.vdmMdDir, vdmGenDocsDir)
     }
 
+    private fun loadSpecification(specificationFiles: List<File>, typeCheck: Boolean = false): Interpreter {
+        val dialect = project.vdmConfig.dialect
+        val controller = dialect.createController()
+        val parseStatus = controller.parse(specificationFiles)
+        if (parseStatus != ExitStatus.EXIT_OK) {
+            throw GradleException("VDM specification cannot be parsed")
+        }
+        if (typeCheck) {
+            val typeCheckStatus = controller.typeCheck()
+            if (typeCheckStatus != ExitStatus.EXIT_OK) {
+                throw GradleException("VDM specification does not type check")
+            }
+        }
+        return controller.getInterpreter()
+    }
+
     private fun copyAdditionalResources(
-            resourceFiles: FileCollection,
-            sourceDirectory: File,
-            targetDirectory: File
+        resourceFiles: FileCollection,
+        sourceDirectory: File,
+        targetDirectory: File
     ) {
         resourceFiles.forEach { file ->
             val targetFile = File(targetDirectory, file.relativeTo(sourceDirectory).path)
@@ -168,30 +201,44 @@ open class DocGenTask : DefaultTask() {
     }
 
     private fun processMarkdownFiles(
-            interpreter: ModuleInterpreter,
-            sharedFiles: SharedFiles,
-            sourceDirectory: File,
-            targetDirectory: File
+        interpreter: ModuleInterpreter,
+        sharedFiles: SharedFiles,
+        sourceDirectory: File,
+        targetDirectory: File
     ) {
         val mdSourceFiles = locateFilesWithExtension(sourceDirectory, "md")
         val tableExtension = TablesExtension.create()
         mdSourceFiles.forEach { mdSourceFile ->
-            val genDocFile = File(targetDirectory, mdSourceFile.relativeTo(sourceDirectory).path.replace(mdRegex, ".html"))
+            val genDocFile =
+                File(targetDirectory, mdSourceFile.relativeTo(sourceDirectory).path.replace(mdRegex, ".html"))
             val pathToModules = sharedFiles.modulesDirectory.relativeTo(mdSourceFile.parentFile).path
             val pathToTestModules = sharedFiles.testModulesDirectory.relativeTo(mdSourceFile.parentFile).path
             val pathToComponent = { groupId: String, artifactId: String ->
                 val componentDirectory = File(vdmGenDocsDir, "$groupId/$artifactId")
                 componentDirectory.relativeTo(genDocFile.parentFile).path
             }
-            val vdmContext = VdmContext(interpreter, isMainModule, isTestModule, isModuleDependency, pathToModules, pathToTestModules, pathToComponent)
+            val vdmContext = VdmContext(
+                interpreter,
+                isMainModule,
+                isTestModule,
+                isModuleDependency,
+                pathToModules,
+                pathToTestModules,
+                pathToComponent
+            )
             val vdmExtension = VdmMdExtension(project.vdmConfig.prettyPrinter, vdmContext)
             val mdParser = Parser.builder().extensions(listOf(vdmExtension, tableExtension)).build()
-            val htmlRenderer = HtmlRenderer.builder().extensions(listOf(vdmExtension, tableExtension)).attributeProviderFactory({ _ ->
-                AutoIdHeadingAttributeProvider()
-            }).build()
+            val htmlRenderer =
+                HtmlRenderer.builder().extensions(listOf(vdmExtension, tableExtension)).attributeProviderFactory({ _ ->
+                    AutoIdHeadingAttributeProvider()
+                }).build()
             val mdDoc = mdParser.parse(mdSourceFile.readText())
             // TODO - pretty print the body/final text (ideally using kotlinx.html, but can't see how to do this easily)
-            val htmlDoc = addMetadata(mdSourceFile.nameWithoutExtension, htmlRenderer.render(mdDoc), sharedFiles.cssFile.relativeTo(genDocFile.parentFile))
+            val htmlDoc = addMetadata(
+                mdSourceFile.nameWithoutExtension,
+                htmlRenderer.render(mdDoc),
+                sharedFiles.cssFile.relativeTo(genDocFile.parentFile)
+            )
             if (!genDocFile.parentFile.exists()) {
                 genDocFile.parentFile.mkdirs()
             }
@@ -213,20 +260,25 @@ open class DocGenTask : DefaultTask() {
     }
 
     private fun addMetadata(title: String, bodyText: String, relativeCssFile: File) =
-            buildString {
-                appendln("<!DOCTYPE html>")
-                appendHTML(xhtmlCompatible = true).html {
-                    attributes["data-theme"] = "vdm"
-                    head {
-                        meta(charset = "UTF-8")
-                        link(rel = "stylesheet", type = "text/css", href = relativeCssFile.path)
-                        title(content = title)
-                    }
-                    body { unsafe { +bodyText } }
+        buildString {
+            appendLine("<!DOCTYPE html>")
+            appendHTML(xhtmlCompatible = true).html {
+                attributes["data-theme"] = "vdm"
+                head {
+                    meta(charset = "UTF-8")
+                    link(rel = "stylesheet", type = "text/css", href = relativeCssFile.path)
+                    title(content = title)
                 }
+                body { unsafe { +bodyText } }
             }
+        }
 
-    private fun generateModuleAppendix(pageTitle: String, modules: List<AModuleModules>, moduleDirectory: File, cssFile: File) {
+    private fun generateModuleAppendix(
+        pageTitle: String,
+        modules: List<AModuleModules>,
+        moduleDirectory: File,
+        cssFile: File
+    ) {
         if (!moduleDirectory.exists()) {
             moduleDirectory.mkdirs()
         }
@@ -245,9 +297,9 @@ open class DocGenTask : DefaultTask() {
 }
 
 private data class SharedFiles(
-        val cssFile: File,
-        val modulesDirectory: File,
-        val testModulesDirectory: File
+    val cssFile: File,
+    val modulesDirectory: File,
+    val testModulesDirectory: File
 )
 
 
@@ -267,17 +319,17 @@ private class AutoIdHeadingAttributeProvider : AttributeProvider {
 }
 
 private data class VdmContext(
-        val interpreter: ModuleInterpreter,
-        val isMainModule: (AModuleModules) -> Boolean,
-        val isTestModule: (AModuleModules) -> Boolean,
-        val isModuleDependency: (AModuleModules) -> Boolean,
-        val pathToModules: String,
-        val pathToTestModules: String,
-        val pathToComponent: (String, String) -> String
+    val interpreter: ModuleInterpreter,
+    val isMainModule: (AModuleModules) -> Boolean,
+    val isTestModule: (AModuleModules) -> Boolean,
+    val isModuleDependency: (AModuleModules) -> Boolean,
+    val pathToModules: String,
+    val pathToTestModules: String,
+    val pathToComponent: (String, String) -> String
 )
 
 private class VdmMdExtension(private val config: PrettyPrinterConfig, private val vdmContext: VdmContext) :
-        Parser.ParserExtension, HtmlRenderer.HtmlRendererExtension {
+    Parser.ParserExtension, HtmlRenderer.HtmlRendererExtension {
 
     override fun extend(rendererBuilder: HtmlRenderer.Builder) {
         rendererBuilder.nodeRendererFactory({ cxt ->
@@ -303,9 +355,9 @@ private abstract class VdmNodeRenderer : NodeRenderer {
 
 // TODO - references assume we're in root directory
 private class VdmHtmlNodeRenderer(
-        private val config: PrettyPrinterConfig,
-        private val vdmContext: VdmContext,
-        private val cxt: HtmlNodeRendererContext
+    private val config: PrettyPrinterConfig,
+    private val vdmContext: VdmContext,
+    private val cxt: HtmlNodeRendererContext
 ) : VdmNodeRenderer() {
     override fun render(node: Node) {
         if (node !is VdmNode) {
@@ -323,8 +375,14 @@ private class VdmHtmlNodeRenderer(
         val commandAndParams = directive.split(Regex(":"))
         val params = commandAndParams.drop(1)
         when (commandAndParams.first()) {
-            "mainModuleList" -> renderModuleList(vdmContext.interpreter.getModules().filterNot(vdmContext.isModuleDependency).filter(vdmContext.isMainModule), "modules")
-            "testModuleList" -> renderModuleList(vdmContext.interpreter.getModules().filterNot(vdmContext.isModuleDependency).filter(vdmContext.isTestModule), "testModules")
+            "mainModuleList" -> renderModuleList(
+                vdmContext.interpreter.getModules().filterNot(vdmContext.isModuleDependency)
+                    .filter(vdmContext.isMainModule), "modules"
+            )
+            "testModuleList" -> renderModuleList(
+                vdmContext.interpreter.getModules().filterNot(vdmContext.isModuleDependency)
+                    .filter(vdmContext.isTestModule), "testModules"
+            )
             "a" -> renderAnchor(params)
             "page" -> renderPageLink(params)
             "link" -> renderLink(params.first())
@@ -374,9 +432,9 @@ private class VdmHtmlNodeRenderer(
     }
 
     private fun renderAnchor(names: List<String>) =
-            names.forEach { name ->
-                cxt.writer.raw(htmlSnippet().div { id = name })
-            }
+        names.forEach { name ->
+            cxt.writer.raw(htmlSnippet().div { id = name })
+        }
 
     private fun renderModuleList(modules: List<AModuleModules>, directory: String) {
         cxt.writer.raw(htmlSnippet().ul {
@@ -388,16 +446,20 @@ private class VdmHtmlNodeRenderer(
     }
 
     private fun determineMinListLengthToUseNls(params: List<String>) =
-            params.find { it.startsWith("minListLengthToUseNls") }?.split(Regex("="))?.last()?.trim()?.toIntOrNull()
-                    ?: config.minListLengthToUseNls
+        params.find { it.startsWith("minListLengthToUseNls") }?.split(Regex("="))?.last()?.trim()?.toIntOrNull()
+            ?: config.minListLengthToUseNls
 
     private fun renderDefinition(vdmReference: String, params: List<String>) {
         val (moduleName, definitionName) = vdmReference.split(Regex("`"))
         val module = findModuleOrDie(moduleName)
         val definition = findDefinitionOrDie(module, definitionName)
-        val definitionText = prettyPrinter.prettyPrint(definition,
-                PrettyPrintConfig(includeHeaderFooter = false, minListLengthToUseNls = determineMinListLengthToUseNls(params),
-                        logUnhandledCases = config.logUnhandledCases))
+        val definitionText = prettyPrinter.prettyPrint(
+            definition,
+            PrettyPrintConfig(
+                includeHeaderFooter = false, minListLengthToUseNls = determineMinListLengthToUseNls(params),
+                logUnhandledCases = config.logUnhandledCases
+            )
+        )
         cxt.writer.raw(htmlSnippet().a(href = "${getModuleDirectory(module)}/$moduleName.html#$definitionName") {
             attributes["class"] = "vdm-cite"
             blockQuote { p { unsafe { +definitionText } } }
@@ -411,12 +473,12 @@ private class VdmHtmlNodeRenderer(
     }
 
     private fun renderLink(vdmReference: String) =
-            if (vdmReference.contains("`")) {
-                val (moduleName, definitionName) = vdmReference.split(Regex("`"))
-                renderDefinitionLink(moduleName, definitionName)
-            } else {
-                renderModuleLink(vdmReference)
-            }
+        if (vdmReference.contains("`")) {
+            val (moduleName, definitionName) = vdmReference.split(Regex("`"))
+            renderDefinitionLink(moduleName, definitionName)
+        } else {
+            renderModuleLink(vdmReference)
+        }
 
     private fun renderModuleLink(moduleName: String) {
         val module = findModuleOrDie(moduleName)
@@ -432,7 +494,7 @@ private class VdmHtmlNodeRenderer(
     private fun htmlSnippet() = createHTML(xhtmlCompatible = true)
 
     private fun getModuleDirectory(module: AModuleModules) =
-            if (vdmContext.isMainModule(module)) vdmContext.pathToModules else vdmContext.pathToTestModules
+        if (vdmContext.isMainModule(module)) vdmContext.pathToModules else vdmContext.pathToTestModules
 
     private fun findModuleOrDie(moduleName: String): AModuleModules {
         return vdmContext.interpreter.modules.find { module ->
@@ -442,9 +504,13 @@ private class VdmHtmlNodeRenderer(
 
     private fun renderVdm(vdmText: String) {
         val node: INode = ParserUtil.parseExpression(vdmText).result
-        val definitionText = prettyPrinter.prettyPrint(node,
-                PrettyPrintConfig(includeHeaderFooter = false, minListLengthToUseNls = config.minListLengthToUseNls,
-                        logUnhandledCases = config.logUnhandledCases))
+        val definitionText = prettyPrinter.prettyPrint(
+            node,
+            PrettyPrintConfig(
+                includeHeaderFooter = false, minListLengthToUseNls = config.minListLengthToUseNls,
+                logUnhandledCases = config.logUnhandledCases
+            )
+        )
         cxt.writer.raw(definitionText)
     }
 }
@@ -491,23 +557,23 @@ fun locateImmediateSubDirectories(directory: File): List<File> {
 }
 
 fun renderModuleAppendixSummary(pageTitle: String, modules: List<AModuleModules>) =
-        buildString {
-            appendHTML(xhtmlCompatible = true).html {
-                attributes["data-theme"] = "vdm"
-                head {
-                    meta(charset = "UTF-8")
-                    link(rel = "stylesheet", type = "text/css", href = "../vdm.css")
-                    title(content = pageTitle)
-                }
-                body {
-                    h1 { +pageTitle }
-                    ul {
-                        modules.map { it.name.name }.sorted().forEach { name ->
-                            li {
-                                a(href = "$name.html") { +name }
-                            }
+    buildString {
+        appendHTML(xhtmlCompatible = true).html {
+            attributes["data-theme"] = "vdm"
+            head {
+                meta(charset = "UTF-8")
+                link(rel = "stylesheet", type = "text/css", href = "../vdm.css")
+                title(content = pageTitle)
+            }
+            body {
+                h1 { +pageTitle }
+                ul {
+                    modules.map { it.name.name }.sorted().forEach { name ->
+                        li {
+                            a(href = "$name.html") { +name }
                         }
                     }
                 }
             }
         }
+    }

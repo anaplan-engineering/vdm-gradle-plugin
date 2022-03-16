@@ -1,0 +1,15 @@
+buildscript {
+    dependencies {
+        classpath files("%functionalTestClasspath.jar%")
+    }
+}
+
+repositories {
+    mavenLocal()
+}
+
+apply plugin: 'vdm'
+
+dependencies {
+    vdm project(":a")
+}

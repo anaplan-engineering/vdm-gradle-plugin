@@ -26,7 +26,7 @@ repositories {
 apply plugin: 'vdm'
 
 dependencies {
-  vdm group: 'testing', name: 'seq', version: '1.0.0'
+    vdm group: 'testing', name: 'seq', version: '1.0.0'
 }
 
 

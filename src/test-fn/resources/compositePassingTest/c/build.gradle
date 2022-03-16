@@ -1,0 +1,7 @@
+buildscript {
+    dependencies {
+        classpath files("%functionalTestClasspath.jar%")
+    }
+}
+
+apply plugin: 'vdm'
