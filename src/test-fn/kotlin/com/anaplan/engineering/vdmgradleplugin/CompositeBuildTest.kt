@@ -22,7 +22,6 @@
 package com.anaplan.engineering.vdmgradleplugin
 
 import com.anaplan.engineering.vdmgradleplugin.TestRunner.executeCompositeBuild
-import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -30,20 +29,20 @@ import java.io.File
 
 @RunWith(Parameterized::class)
 class CompositeBuildTest(
-        private val testName: String,
-        private val expectSuccess: Boolean
+    private val testName: String,
+    private val expectSuccess: Boolean
 ) {
 
     companion object {
         @JvmStatic
         @Parameterized.Parameters(name = "{0}")
         fun example() = arrayOf(
-                test(testName = "compositeWithDependencyPassingTest")
+            test(testName = "compositeWithDependencyPassingTest")
         )
 
         private fun test(
-                testName: String,
-                expectSuccess: Boolean = true
+            testName: String,
+            expectSuccess: Boolean = true
         ): Array<Any> = arrayOf(testName, expectSuccess)
     }
 
@@ -51,9 +50,10 @@ class CompositeBuildTest(
     fun compositeBuildTest() {
         val dir = File(javaClass.getResource("/$testName").toURI())
         executeCompositeBuild(
-                projectDir = dir,
-                tasks = arrayOf("build"),
-                fail = !expectSuccess)
+            projectDir = dir,
+            tasks = arrayOf("build"),
+            fail = !expectSuccess
+        )
     }
 
 }

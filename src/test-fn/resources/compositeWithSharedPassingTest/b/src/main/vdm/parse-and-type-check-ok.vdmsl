@@ -1,9 +1,0 @@
-module Main
-
-definitions
-
-values
-
-x : nat = 1
-
-end Main

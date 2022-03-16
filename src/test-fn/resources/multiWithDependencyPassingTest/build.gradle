@@ -1,4 +1,3 @@
-
 buildscript {
     dependencies {
         classpath files("%functionalTestClasspath.jar%")

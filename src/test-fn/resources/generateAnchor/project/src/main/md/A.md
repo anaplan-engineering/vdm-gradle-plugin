@@ -1,4 +1,3 @@
 # hello, world!
 
-{@a:GettingStarted}
-lorem ipsum
+{@a:GettingStarted} lorem ipsum

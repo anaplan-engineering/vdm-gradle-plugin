@@ -30,27 +30,32 @@ class PomRewriterTest {
 
     @Test
     fun addDependencies_noExistingDependencies() = check("pom-no-dependencies") { pomRewriter ->
-        pomRewriter.addDependencies(listOf(
+        pomRewriter.addDependencies(
+            listOf(
                 PomRewriter.Dependency("group", "artifact", "1.0.0", null, "zip", "compile")
-        ))
+            )
+        )
     }
 
     @Test
     fun addDependencies_withExistingDependencies() = check("pom-with-dependencies") { pomRewriter ->
-        pomRewriter.addDependencies(listOf(
+        pomRewriter.addDependencies(
+            listOf(
                 PomRewriter.Dependency("group2", "artifact2", "2.0.0", null, "zip", "compile")
-        ))
+            )
+        )
     }
 
     private fun check(resourceSuffix: String, makeChanges: (PomRewriter) -> Unit) {
         val tempDir = Files.createTempDirectory(resourceSuffix)
-        val sourceFileOrig = Paths.get(javaClass.getResource("$resourceSuffix-source.xml").toURI())
+        val sourceFileOrig = Paths.get(javaClass.getResource("$resourceSuffix-source.xml")!!.toURI())
         val sourceFileCopy = tempDir.resolve("$resourceSuffix-source.xml")
         Files.copy(sourceFileOrig, sourceFileCopy)
         makeChanges(PomRewriter(sourceFileCopy.toFile()))
-        val expectedFile = Paths.get(javaClass.getResource("$resourceSuffix-expected.xml").toURI())
-        Assert.assertEquals(expectedFile.toFile().readText(), sourceFileCopy.toFile().readText())
+        val expectedFile = Paths.get(javaClass.getResource("$resourceSuffix-expected.xml")!!.toURI())
+        Assert.assertEquals(
+            XmlHelper.normalizeDocument(expectedFile),
+            XmlHelper.normalizeDocument(sourceFileCopy)
+        )
     }
-
-
 }

@@ -24,7 +24,6 @@ package com.anaplan.engineering.vdmgradleplugin
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.tasks.*
-import org.gradle.api.tasks.PathSensitivity.*
 import org.gradle.api.tasks.options.Option
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 import java.io.File
@@ -38,7 +37,7 @@ internal fun Project.addTestTask() {
         val testTask = tasks.getByName(test) ?: throw GradleException("Cannot find VDM test task")
         testTask.dependsOn(typeCheckTests)
         val checkTask = tasks.getByName(LifecycleBasePlugin.CHECK_TASK_NAME)
-                ?: throw GradleException("Cannot find check task")
+            ?: throw GradleException("Cannot find check task")
         checkTask.dependsOn(test)
     }
 }
@@ -54,10 +53,10 @@ open class VdmTestRunTask() : OvertureTask() {
         @Input
         get() = project.vdmConfig.testLaunchGeneration
 
-    val generatedLibFile: File
-        @InputFile
-        @PathSensitive(RELATIVE)
-        get() = project.generatedLibFile
+    val specificationFiles: List<File>
+        @PathSensitive(PathSensitivity.RELATIVE)
+        @InputFiles
+        get() = project.locateAllSpecifications(dialect, true).map { File(it.absolutePath) }
 
     val reportDir: File
         @OutputDirectory
@@ -73,35 +72,37 @@ open class VdmTestRunTask() : OvertureTask() {
 
     private var testFilter: String = "Test.*"
         @Option(option = "tests", description = "Filter the tests to be run")
-        set(value) { field = value }
+        set(value) {
+            field = value
+        }
 
     override fun exec() {
         if (dialect != Dialect.vdmsl) {
             throw GradleException("Test running only defined for VDM-SL currently")
         }
         jvmArgs = project.vdmConfig.overtureJvmArgs
-        super.setArgs(constructArgs())
-        super.setClasspath(project.files(createClassPathJar()))
+        setArgs(constructArgs())
+        classpath = project.files(createClassPathJar())
         super.exec()
     }
 
     private fun constructArgs() =
-            if (recordCoverage) {
-                listOf("--coverage-target-dir", coverageDir.absolutePath)
-            } else {
-                emptyList()
-            } +
-                    listOf(
-                            "--log-level", project.gradle.startParameter.logLevel,
-                            "--run-tests", true,
-                            "--test-filter", testFilter,
-                            "--report-target-dir", reportDir.absolutePath,
-                            "--launch-target-dir", launchDir.absolutePath,
-                            "--test-launch-generation", testLaunchGeneration.name,
-                            "--test-launch-project-name", project.name,
-                            "--coverage-source-dir", project.vdmSourceDir.absolutePath,
-                            "--test-source-dir", project.vdmTestSourceDir.absolutePath,
-                            "--monitor-memory", project.vdmConfig.monitorOvertureMemory
-                    ) + project.locateAllSpecifications(dialect, true).map { it.absolutePath }
+        if (recordCoverage) {
+            listOf("--coverage-target-dir", coverageDir.absolutePath)
+        } else {
+            emptyList()
+        } +
+            listOf(
+                "--log-level", project.gradle.startParameter.logLevel,
+                "--run-tests", true,
+                "--test-filter", testFilter,
+                "--report-target-dir", reportDir.absolutePath,
+                "--launch-target-dir", launchDir.absolutePath,
+                "--test-launch-generation", testLaunchGeneration.name,
+                "--test-launch-project-name", project.name,
+                "--coverage-source-dir", project.vdmSourceDir.absolutePath,
+                "--test-source-dir", project.vdmTestSourceDir.absolutePath,
+                "--monitor-memory", project.vdmConfig.monitorOvertureMemory
+            ) + project.locateAllSpecifications(dialect, true).map { it.absolutePath }
 
 }

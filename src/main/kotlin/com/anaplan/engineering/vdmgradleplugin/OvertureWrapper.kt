@@ -75,10 +75,6 @@ class OvertureWrapper(parser: ArgParser) {
 
     private val testFilter by parser.storing("Test filter").default("Test.*")
 
-    private val outputLib by parser.storing("Optional location of lib file") {
-        File(this)
-    }.default { null }
-
     private val dialect by parser.storing("The VDM dialect") {
         Dialect.valueOf(this)
     }.default(Dialect.vdmsl)
@@ -145,7 +141,7 @@ class OvertureWrapper(parser: ArgParser) {
         }
 
         override fun run() {
-            while(true) {
+            while (true) {
                 sleep(10000)
                 val mem = humanReadableByteCountBin(Runtime.getRuntime().totalMemory())
                 logger.info("Memory reserved by Overture fork: $mem")
@@ -161,9 +157,9 @@ class OvertureWrapper(parser: ArgParser) {
         if (runTests) {
             if (dialect != Dialect.vdmsl) {
                 logger.error("Test running only defined for VDM-SL currently")
-                exitProcess(1)
+                exitProcess(ExitCodes.UnexpectedDialect)
             }
-            runTests(interpreter)
+            runTests(interpreter as ModuleInterpreter)
         }
     }
 
@@ -256,9 +252,9 @@ class OvertureWrapper(parser: ArgParser) {
 
     private fun logTestResults(testResults: List<TestSuiteResult>) {
         if (testResults.all { it.succeeded }) {
-            logger.info("SUCCESS -- ${testResults.sumBy { it.testCount }} tests passed")
+            logger.info("SUCCESS -- ${testResults.sumOf { it.testCount }} tests passed")
         } else {
-            logger.info("FAILURE -- ${testResults.sumBy { it.failCount }} tests failed, ${testResults.sumBy { it.errorCount }} tests had errors [${testResults.sumBy { it.testCount }} tests were run]")
+            logger.info("FAILURE -- ${testResults.sumOf { it.failCount }} tests failed, ${testResults.sumOf { it.errorCount }} tests had errors [${testResults.sumOf { it.testCount }} tests were run]")
         }
     }
 
@@ -269,25 +265,9 @@ class OvertureWrapper(parser: ArgParser) {
         val TypeCheckFailed = 4
     }
 
-    /*
-        Various strategies have been attempted here to make use of binaries and to split out the parse phase from the type
-        check phase, but Overture doesn't really help.
-
-        We should look to implement the following in Overture and then revisit:
-        - produce non-type checked binary format (for parse phase)
-        - do not include loaded libs when writing out binary (otherwise we have transitive issues) so that we can:
-            * store main and test in separate libs
-            * publish and depend upon libs
-
-         If we try and create a binary for the main and then load that in test we get false warnings of duplicate declarations.
-         These become very distracting and obfuscate real issues, so we have reverted to starting from scratch in each task.
-    */
-    private fun loadSpecification(): ModuleInterpreter {
+    private fun loadSpecification(): Interpreter {
         // For coverage we need to reparse to correctly identify lex locations in files
         val controller = dialect.createController()
-        if (outputLib != null) {
-            controller.setOutfile(outputLib!!.absolutePath)
-        }
         val parseStatus = controller.parse(specificationFiles)
         if (parseStatus != ExitStatus.EXIT_OK) {
             exitProcess(ExitCodes.ParseFailed)
@@ -296,16 +276,14 @@ class OvertureWrapper(parser: ArgParser) {
         if (typeCheckStatus != ExitStatus.EXIT_OK) {
             exitProcess(ExitCodes.TypeCheckFailed)
         }
-        return controller.getInterpreter() as? ModuleInterpreter
-        // this should never happen as we have limited dialect to VDM-SL
-                ?: exitProcess(ExitCodes.UnexpectedDialect)
+        return controller.getInterpreter()
     }
 
     private fun collectTests(interpreter: ModuleInterpreter): List<TestSuite> {
         val filterRegex = Regex(testFilter)
         val testModules = interpreter.modules.filter { module ->
             module.files.all { testSourceDir == null || it.startsWith(testSourceDir!!) } &&
-                    module.name.name.startsWith("Test")
+                module.name.name.startsWith("Test")
         }
         return testModules.map { module ->
             val operationDefs = module.defs.filter { it is SOperationDefinition }.map { it as SOperationDefinition }
@@ -365,8 +343,8 @@ class OvertureWrapper(parser: ArgParser) {
 }
 
 private data class TestSuite(
-        val moduleName: String,
-        val testNames: List<String>
+    val moduleName: String,
+    val testNames: List<String>
 )
 
 private enum class TestResultState {
@@ -376,16 +354,16 @@ private enum class TestResultState {
 }
 
 private data class TestResult(
-        val testName: String,
-        val duration: Long,
-        val state: TestResultState,
-        val message: String? = null
+    val testName: String,
+    val duration: Long,
+    val state: TestResultState,
+    val message: String? = null
 )
 
 private data class TestSuiteResult(
-        val moduleName: String,
-        val timestamp: LocalDateTime,
-        val testResults: List<TestResult>
+    val moduleName: String,
+    val timestamp: LocalDateTime,
+    val testResults: List<TestResult>
 ) {
     val errorCount: Int by lazy {
         testResults.count { it.state == TestResultState.ERROR }
@@ -397,20 +375,11 @@ private data class TestSuiteResult(
         testResults.size
     }
     val duration: Long by lazy {
-        testResults.sumByLong { it.duration }
+        testResults.sumOf { it.duration }
     }
     val succeeded: Boolean by lazy {
         testResults.all { it.state == TestResultState.PASS }
     }
-}
-
-// copies _Collections.sumBy for long
-private inline fun <T> Iterable<T>.sumByLong(selector: (T) -> Long): Long {
-    var sum: Long = 0
-    for (element in this) {
-        sum += selector(element)
-    }
-    return sum
 }
 
 private enum class ExpectedTestResult(val description: String) {
@@ -420,19 +389,13 @@ private enum class ExpectedTestResult(val description: String) {
     failedInvariant("invariant failure")
 }
 
-// ideally this would be done through an annotation, but this is not feasible currently
-private fun getExpectedResult(testName: String): ExpectedTestResult {
-    val testNameLower = testName.toLowerCase()
-    return if (testNameLower.toLowerCase().contains("expectpreconditionfailure")) {
-        ExpectedTestResult.failedPrecondition
-    } else if (testNameLower.contains("expectpostconditionfailure")) {
-        ExpectedTestResult.failedPostcondition
-    } else if (testNameLower.contains("expectinvariantfailure")) {
-        ExpectedTestResult.failedInvariant
-    } else {
-        ExpectedTestResult.success
+private fun getExpectedResult(testName: String): ExpectedTestResult =
+    when {
+        testName.contains("expectpreconditionfailure", ignoreCase = true) -> ExpectedTestResult.failedPrecondition
+        testName.contains("expectpostconditionfailure", ignoreCase = true) -> ExpectedTestResult.failedPostcondition
+        testName.contains("expectinvariantfailure", ignoreCase = true) -> ExpectedTestResult.failedInvariant
+        else -> ExpectedTestResult.success
     }
-}
 
 private val preconditionFailureCodes = setOf(4055, 4071)
 private val postconditionFailureCodes = setOf(4056, 4072)

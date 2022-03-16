@@ -25,47 +25,9 @@ import org.overture.interpreter.VDMJ
 import org.overture.interpreter.VDMPP
 import org.overture.interpreter.VDMRT
 import org.overture.interpreter.VDMSL
-import org.overture.interpreter.runtime.Interpreter
-import org.overture.interpreter.util.ExitStatus
-import java.io.File
-import java.util.*
 
-enum class Dialect(val fileExtension : String, val createController : () -> GradleVdm) {
-    vdmsl("vdmsl", { GradleVdmSl() }),
-    vdmpp("vdmpp", { GradleVdmPp() }),
-    vdmrt("vdmrt", { GradleVdmRt() }),
-}
-
-interface GradleVdm {
-    fun setOutfile(outfile : String)
-
-    fun parse(files: List<File>): ExitStatus
-
-    fun typeCheck(): ExitStatus
-
-    fun getInterpreter(): Interpreter
-}
-
-open class GradleVdmSl : VDMSL(), GradleVdm {
-
-    override fun setOutfile(outfile : String) {
-        VDMJ.outfile = outfile
-    }
-
-}
-
-open class GradleVdmPp : VDMPP(), GradleVdm {
-
-    override fun setOutfile(outfile : String) {
-        VDMJ.outfile = outfile
-    }
-
-}
-
-open class GradleVdmRt : VDMRT(), GradleVdm {
-
-    override fun setOutfile(outfile : String) {
-        VDMJ.outfile = outfile
-    }
-
+enum class Dialect(val fileExtension: String, val createController: () -> VDMJ) {
+    vdmsl("vdmsl", { VDMSL() }),
+    vdmpp("vdmpp", { VDMPP() }),
+    vdmrt("vdmrt", { VDMRT() }),
 }

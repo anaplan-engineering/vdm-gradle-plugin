@@ -28,7 +28,7 @@ import java.time.LocalDateTime
 private val Project.vdmManifestDir
     get() = File(vdmBuildDir, "manifests")
 
-private fun Project.createManifestFile(type: String) : File {
+private fun Project.createManifestFile(type: String): File {
     val manifestFile = File(vdmManifestDir, "manifest-$type.mf")
     if (!manifestFile.parentFile.exists()) {
         manifestFile.parentFile.mkdirs()

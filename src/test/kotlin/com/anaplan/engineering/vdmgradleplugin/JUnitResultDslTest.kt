@@ -159,6 +159,7 @@ class JUnitResultDslTest {
             }
         }
     }
+
     @Test
     fun mixedTests() = check("mixed-tests") {
         testSuite {

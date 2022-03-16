@@ -30,33 +30,33 @@ import java.io.File
 
 @RunWith(Parameterized::class)
 class CompositeTestTest(
-        private val testName: String,
-        private val expectSuccess: Boolean
+    private val testName: String,
+    private val expectSuccess: Boolean
 ) {
 
     companion object {
         @JvmStatic
         @Parameterized.Parameters(name = "{0}")
         fun example() = arrayOf(
-                test(testName = "compositePassingTest"),
-                test(testName = "compositeWithSharedPassingTest"),
-                // We have been unable to get the information needed to enable composite substitution
-                test(testName = "compositeWithDependencyPassingTest", expectSuccess = false)
+            test(testName = "compositePassingTest"),
+            // We have been unable to get the information needed to enable composite substitution
+            test(testName = "compositeWithDependencyPassingTest", expectSuccess = false)
         )
 
         private fun test(
-                testName: String,
-                expectSuccess: Boolean = true
+            testName: String,
+            expectSuccess: Boolean = true
         ): Array<Any> = arrayOf(testName, expectSuccess)
     }
 
     @Test
     fun compositeTestTest() {
-        val dir = File(javaClass.getResource("/$testName").toURI())
+        val dir = File(javaClass.getResource("/$testName")!!.toURI())
         executeCompositeBuild(
-                projectDir = dir,
-                tasks = arrayOf("test"),
-                fail = !expectSuccess)
+            projectDir = dir,
+            tasks = arrayOf("test"),
+            fail = !expectSuccess
+        )
         if (expectSuccess) {
             dir.listFiles()!!.filter {
                 it.isDirectory && File(it, "build.gradle").exists()

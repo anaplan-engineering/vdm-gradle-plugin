@@ -25,7 +25,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
-import org.gradle.language.base.plugins.LifecycleBasePlugin
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
@@ -60,7 +59,8 @@ internal fun cleanLibs(project: Project) {
         Files.walkFileTree(libDir.toPath(), object : SimpleFileVisitor<Path>() {
             override fun visitFile(file: Path, attrs: BasicFileAttributes?): FileVisitResult {
                 if ((Files.isSymbolicLink(file) && Files.readSymbolicLink(file).startsWith(buildDir))
-                        || Files.exists(project.vdmLibDependencyDir.toPath().resolve(file.fileName))) {
+                    || Files.exists(project.vdmLibDependencyDir.toPath().resolve(file.fileName))
+                ) {
                     Files.delete(file)
                 }
                 return FileVisitResult.CONTINUE

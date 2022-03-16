@@ -21,18 +21,14 @@
  */
 package com.anaplan.engineering.vdmgradleplugin
 
-import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.overture.interpreter.runtime.Interpreter
-import org.overture.interpreter.util.ExitStatus
 import java.io.File
 import java.io.IOException
 import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.*
-import kotlin.collections.ArrayList
 
 class VdmGradlePlugin : Plugin<Project> {
 
@@ -94,9 +90,6 @@ internal val Project.vdmTestDependencyDir
 internal val Project.vdmLibDependencyDir
     get() = File(vdmBuildDir, "lib-dependencies")
 
-internal val Project.generatedLibFile
-    get() = File(vdmBuildDir, "generated.lib")
-
 internal val Project.vdmPackageFile: File
     get() = File(buildDir, "libs/$name-$version.zip")
 
@@ -107,22 +100,25 @@ internal val Project.vdmTestPackageFile: File
     get() = File(buildDir, "libs/$name-$version-test.zip")
 
 internal fun Project.createVdmTask(name: String, type: Class<out Task>) =
-        tasks.create(mapOf<String, Any>(
-                "name" to name,
-                "type" to type,
-                "group" to vdmTaskGroup
-        ))
+    tasks.create(
+        mapOf<String, Any>(
+            "name" to name,
+            "type" to type,
+            "group" to vdmTaskGroup
+        )
+    )
 
 internal fun Project.locateAllSpecifications(dialect: Dialect, includeTests: Boolean) =
-        project.files(
-                locateSpecifications(project.vdmDependencyDir, dialect) +
-                        locateSpecifications(project.vdmSourceDir, dialect) +
-                        if (includeTests) {
-                            locateSpecifications(project.vdmTestDependencyDir, dialect) +
-                                    locateSpecifications(project.vdmTestSourceDir, dialect)
-                        } else {
-                            listOf()
-                        })
+    project.files(
+        locateSpecifications(project.vdmDependencyDir, dialect) +
+            locateSpecifications(project.vdmSourceDir, dialect) +
+            if (includeTests) {
+                locateSpecifications(project.vdmTestDependencyDir, dialect) +
+                    locateSpecifications(project.vdmTestSourceDir, dialect)
+            } else {
+                listOf()
+            }
+    )
 
 internal fun locateSpecifications(directory: File, dialect: Dialect): List<File> {
     return locateFilesWithExtension(directory, dialect.fileExtension)
@@ -146,7 +142,7 @@ internal fun locateFilesWithExtension(directory: File, vararg extensions: String
     return files.map { it.toFile() }
 }
 
-internal val isWindows = System.getProperty("os.name").toLowerCase().contains("windows")
+internal val isWindows = System.getProperty("os.name").contains("windows", ignoreCase = true)
 
 internal fun deleteDirectory(directory: File) {
     if (!directory.exists()) {
@@ -173,14 +169,3 @@ internal fun deleteDirectory(directory: File) {
     }
     Files.walkFileTree(directory.toPath(), fileVisitor)
 }
-
-internal fun Project.loadBinarySpecification(binary: File, vararg otherFiles: File): Interpreter {
-    val dialect = project.vdmConfig.dialect
-    val controller = dialect.createController()
-    val parseStatus = controller.parse(listOf(binary) + otherFiles)
-    if (parseStatus != ExitStatus.EXIT_OK) {
-        throw GradleException("VDM parse of generated lib failed")
-    }
-    return controller.getInterpreter()
-}
-

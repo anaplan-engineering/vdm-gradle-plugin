@@ -23,8 +23,11 @@ package com.anaplan.engineering.vdmgradleplugin
 
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
+import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.*
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.OutputStream
 
 const val typeCheck = "typeCheck"
 const val typeCheckTests = "typeCheckTests"
@@ -33,7 +36,8 @@ internal fun Project.addTypeCheckTasks() {
     createVdmTask(typeCheck, VdmTypeCheckMainTask::class.java)
     createVdmTask(typeCheckTests, VdmTypeCheckTestTask::class.java)
     afterEvaluate {
-        it.tasks.matching { it.name == typeCheck || it.name == typeCheckTests }.forEach { it.dependsOn(dependencyUnpack) }
+        it.tasks.matching { it.name == typeCheck || it.name == typeCheckTests }
+            .forEach { it.dependsOn(dependencyUnpack) }
     }
 }
 
@@ -45,32 +49,52 @@ open class VdmTypeCheckTestTask() : VdmTypeCheckTask(true)
 
 open class VdmTypeCheckTask(private val includeTests: Boolean) : OvertureTask() {
 
-    val specificationFiles: FileCollection
+    private val specificationFiles: FileCollection
         @PathSensitive(PathSensitivity.RELATIVE)
         @InputFiles
         get() = project.locateAllSpecifications(dialect, includeTests)
 
-    val generatedLibFile: File
+    // Only needed to ensure caching of the Gradle task
+    private val logFile: File
         @OutputFile
-        get() = project.generatedLibFile
-
+        get() = File(project.vdmBuildDir, "typeCheckTask.log")
 
     override fun exec() {
         logger.info("VDM dialect: $dialect")
-        jvmArgs = project.vdmConfig.overtureJvmArgs
-        super.setArgs(constructArgs())
-        super.setClasspath(project.files(createClassPathJar()))
-        super.exec()
+        if (specificationFiles.isEmpty) {
+            logger.info("No files found")
+        } else {
+            standardOutput = ByteArrayOutputStream()
+            jvmArgs = project.vdmConfig.overtureJvmArgs
+            setArgs(constructArgs())
+            classpath = project.files(createClassPathJar())
+            super.exec()
+            writeOutput(standardOutput)
+        }
+    }
+
+    private fun writeOutput(os: OutputStream) {
+        val output = os.toString()
+        logFile.writeText(output)
+        output.lineSequence().forEach {
+            logger.log(getLogLevel(it), it)
+        }
+    }
+
+    private fun getLogLevel(line: String) = when {
+        line.startsWith("Error") -> LogLevel.ERROR
+        line.startsWith("Warning") -> LogLevel.WARN
+        line.startsWith("Parsed") || line.startsWith("Type checked") -> LogLevel.INFO
+        else -> LogLevel.LIFECYCLE
     }
 
     private fun constructArgs() =
-            listOf(
-                    "--dialect", dialect.name,
-                    "--log-level", project.gradle.startParameter.logLevel,
-                    "--run-tests", false,
-                    "--output-lib", generatedLibFile.absolutePath,
-                    "--monitor-memory", project.vdmConfig.monitorOvertureMemory
-            ) + specificationFiles.map { it.absolutePath }
+        listOf(
+            "--dialect", dialect.name,
+            "--log-level", project.gradle.startParameter.logLevel,
+            "--run-tests", false,
+            "--monitor-memory", project.vdmConfig.monitorOvertureMemory
+        ) + specificationFiles.map { it.absolutePath }
 
 }
 

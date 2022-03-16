@@ -1,4 +1,4 @@
-module TestTest
+module TestTestA
 
 definitions
 
@@ -13,6 +13,4 @@ operations
   TestAdd() == Add(1,1)
   post RESULT = 2;
 
-end TestTest
-
-
+end TestTestA
