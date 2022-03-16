@@ -48,11 +48,11 @@ internal fun Project.addDependencyUnpackTask() {
             val plugins = it.dependencyProject.plugins
             if (plugins.findPlugin("vdm") != null) {
                 val dependencyTask = it.dependencyProject.tasks.getByName(dependencyUnpack)
-                        ?: throw GradleException("Cannot find unpack task in project dependency")
+                    ?: throw GradleException("Cannot find unpack task in project dependency")
                 localTask.dependsOn(dependencyTask)
             } else if (plugins.findPlugin("java") != null) {
                 val assembleTask = it.dependencyProject.tasks.getByName(LifecycleBasePlugin.ASSEMBLE_TASK_NAME)
-                        ?: throw GradleException("Cannot find unpack task in project dependency")
+                    ?: throw GradleException("Cannot find unpack task in project dependency")
                 localTask.dependsOn(assembleTask)
             } else {
                 throw GradleException("Don't know what to do with project $it")
@@ -70,7 +70,9 @@ open class DependencyUnpackTask : DefaultTask() {
         @Input
         get() = vdmConfiguration.dependencies.map { d ->
             // No way that we can determine whether snapshots are uptodate without resolution -- so take pessimistic view
-            "${d.group}:${d.name}:${if (d.version?.endsWith("-SNAPSHOT") == true) LocalDateTime.now().toString() else d.version}"
+            "${d.group}:${d.name}:${
+                if (d.version?.endsWith("-SNAPSHOT") == true) LocalDateTime.now().toString() else d.version
+            }"
         }.joinToString(";")
 
     val vdmMdDependencyDir: File
@@ -157,7 +159,7 @@ open class DependencyUnpackTask : DefaultTask() {
                             val projectId = component.id as ProjectComponentIdentifier
                             logger.info("Link to project: $projectId")
                             val dependency = project.findProject(projectId.projectPath)
-                                    ?: throw GradleException("References unlocatable dependency $projectId")
+                                ?: throw GradleException("References unlocatable dependency $projectId")
 
 
                             val plugins = dependency.plugins
@@ -169,11 +171,12 @@ open class DependencyUnpackTask : DefaultTask() {
                                 createLink(dependencyLink, dependency.vdmSourceDir)
 
                                 val groupDirs = dependency.vdmDependencyDir.listFiles()?.filter { it.isDirectory }
-                                        ?: emptyList()
+                                    ?: emptyList()
                                 groupDirs.forEach { groupDir ->
                                     val moduleDirs = groupDir.listFiles()?.filter { it.isDirectory } ?: emptyList()
                                     moduleDirs.forEach { moduleDir ->
-                                        val transDependencyLink = File(vdmDependencyDir, "${groupDir.name}/${moduleDir.name}")
+                                        val transDependencyLink =
+                                            File(vdmDependencyDir, "${groupDir.name}/${moduleDir.name}")
                                         if (transDependencyLink.exists()) {
                                             // check its the same?
                                         } else {
@@ -185,19 +188,22 @@ open class DependencyUnpackTask : DefaultTask() {
 
                                 if (autoDependTest) {
                                     if (dependency.vdmTestSourceDir.exists()) {
-                                        val testDependencyLink = File(vdmTestDependencyDir, "${dependency.group}/${dependency.name}")
+                                        val testDependencyLink =
+                                            File(vdmTestDependencyDir, "${dependency.group}/${dependency.name}")
                                         if (testDependencyLink.exists()) {
                                             testDependencyLink.delete()
                                         }
                                         createLink(testDependencyLink, dependency.vdmTestSourceDir)
                                     }
 
-                                    val testGroupDirs = dependency.vdmTestDependencyDir.listFiles()?.filter { it.isDirectory }
+                                    val testGroupDirs =
+                                        dependency.vdmTestDependencyDir.listFiles()?.filter { it.isDirectory }
                                             ?: emptyList()
                                     testGroupDirs.forEach { groupDir ->
                                         val moduleDirs = groupDir.listFiles()?.filter { it.isDirectory } ?: emptyList()
                                         moduleDirs.forEach { moduleDir ->
-                                            val transDependencyLink = File(vdmTestDependencyDir, "${groupDir.name}/${moduleDir.name}")
+                                            val transDependencyLink =
+                                                File(vdmTestDependencyDir, "${groupDir.name}/${moduleDir.name}")
                                             if (transDependencyLink.exists()) {
                                                 // check its the same?
                                             } else {
@@ -209,19 +215,22 @@ open class DependencyUnpackTask : DefaultTask() {
 
                                 if (autoDependMd) {
                                     if (dependency.vdmMdDir.exists()) {
-                                        val mdDependencyLink = File(vdmMdDependencyDir, "${dependency.group}/${dependency.name}")
+                                        val mdDependencyLink =
+                                            File(vdmMdDependencyDir, "${dependency.group}/${dependency.name}")
                                         if (mdDependencyLink.exists()) {
                                             mdDependencyLink.delete()
                                         }
                                         createLink(mdDependencyLink, dependency.vdmMdDir)
                                     }
 
-                                    val mdGroupDirs = dependency.vdmMdDependencyDir.listFiles()?.filter { it.isDirectory }
+                                    val mdGroupDirs =
+                                        dependency.vdmMdDependencyDir.listFiles()?.filter { it.isDirectory }
                                             ?: emptyList()
                                     mdGroupDirs.forEach { groupDir ->
                                         val moduleDirs = groupDir.listFiles()?.filter { it.isDirectory } ?: emptyList()
                                         moduleDirs.forEach { moduleDir ->
-                                            val transDependencyLink = File(vdmMdDependencyDir, "${groupDir.name}/${moduleDir.name}")
+                                            val transDependencyLink =
+                                                File(vdmMdDependencyDir, "${groupDir.name}/${moduleDir.name}")
                                             if (transDependencyLink.exists()) {
                                                 // check its the same?
                                             } else {

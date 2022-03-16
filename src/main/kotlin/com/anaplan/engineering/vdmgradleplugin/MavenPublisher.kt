@@ -25,7 +25,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.publish.PublishingExtension
-import org.gradle.api.publish.maven.MavenArtifact
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.tasks.TaskAction
@@ -118,10 +117,10 @@ open class AddVdmDependenciesToPomTask() : DefaultTask() {
         val vdmConfiguration = project.configurations.getByName(vdmConfigurationName)
         val dependencies = vdmConfiguration.dependencies.map { d ->
             PomRewriter.Dependency(
-                    groupId = d.group ?: throw IllegalStateException("Dependency has null group id"),
-                    artifactId = d.name,
-                    version = d.version ?: throw IllegalStateException("Dependency has null version"),
-                    scope = "compile"
+                groupId = d.group ?: throw IllegalStateException("Dependency has null group id"),
+                artifactId = d.name,
+                version = d.version ?: throw IllegalStateException("Dependency has null version"),
+                scope = "compile"
             )
         }
         pomRewriter.addDependencies(dependencies)

@@ -1,12 +1,12 @@
 package com.anaplan.engineering.vdmgradleplugin
 
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
 import org.commonmark.ext.gfm.tables.TablesExtension
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
 import org.junit.Assert
 import org.junit.Test
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import org.overture.ast.intf.lex.ILexIdentifierToken
 import org.overture.ast.modules.AModuleModules
 
@@ -22,7 +22,8 @@ class DocumentGeneratorTest {
             module
         }
 
-        Assert.assertEquals("""
+        Assert.assertEquals(
+            """
               |<html data-theme="vdm">
               |  <head>
               |    <meta charset="UTF-8"/>
@@ -40,7 +41,8 @@ class DocumentGeneratorTest {
               |  </body>
               |</html>
               |
-            """.trimMargin(), renderModuleAppendixSummary("summary", modules))
+            """.trimMargin(), renderModuleAppendixSummary("summary", modules)
+        )
 
     }
 

@@ -27,12 +27,12 @@ import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
 internal data class ZipContents(
-        val contents : Iterable<File>,
-        val aliases : List<File>? = null,
-        val baseDir : File? = null
+    val contents: Iterable<File>,
+    val aliases: List<File>? = null,
+    val baseDir: File? = null
 )
 
-internal fun createZip(zipFile: File, vararg contents : ZipContents) {
+internal fun createZip(zipFile: File, vararg contents: ZipContents) {
     val zipDirectory = zipFile.parentFile
     if (!zipDirectory.exists()) {
         zipDirectory.mkdirs()
@@ -59,7 +59,7 @@ internal fun createZip(zipFile: File, vararg contents : ZipContents) {
     }
 }
 
-internal fun extractZip(zipFile : File, outputDir: File) {
+internal fun extractZip(zipFile: File, outputDir: File) {
     ZipFile(zipFile).use { zip ->
         zip.entries().asSequence().forEach { entry ->
             zip.getInputStream(entry).use { input ->

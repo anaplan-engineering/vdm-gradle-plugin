@@ -141,7 +141,7 @@ class OvertureWrapper(parser: ArgParser) {
         }
 
         override fun run() {
-            while(true) {
+            while (true) {
                 sleep(10000)
                 val mem = humanReadableByteCountBin(Runtime.getRuntime().totalMemory())
                 logger.info("Memory reserved by Overture fork: $mem")
@@ -283,7 +283,7 @@ class OvertureWrapper(parser: ArgParser) {
         val filterRegex = Regex(testFilter)
         val testModules = interpreter.modules.filter { module ->
             module.files.all { testSourceDir == null || it.startsWith(testSourceDir!!) } &&
-                    module.name.name.startsWith("Test")
+                module.name.name.startsWith("Test")
         }
         return testModules.map { module ->
             val operationDefs = module.defs.filter { it is SOperationDefinition }.map { it as SOperationDefinition }
@@ -343,8 +343,8 @@ class OvertureWrapper(parser: ArgParser) {
 }
 
 private data class TestSuite(
-        val moduleName: String,
-        val testNames: List<String>
+    val moduleName: String,
+    val testNames: List<String>
 )
 
 private enum class TestResultState {
@@ -354,16 +354,16 @@ private enum class TestResultState {
 }
 
 private data class TestResult(
-        val testName: String,
-        val duration: Long,
-        val state: TestResultState,
-        val message: String? = null
+    val testName: String,
+    val duration: Long,
+    val state: TestResultState,
+    val message: String? = null
 )
 
 private data class TestSuiteResult(
-        val moduleName: String,
-        val timestamp: LocalDateTime,
-        val testResults: List<TestResult>
+    val moduleName: String,
+    val timestamp: LocalDateTime,
+    val testResults: List<TestResult>
 ) {
     val errorCount: Int by lazy {
         testResults.count { it.state == TestResultState.ERROR }

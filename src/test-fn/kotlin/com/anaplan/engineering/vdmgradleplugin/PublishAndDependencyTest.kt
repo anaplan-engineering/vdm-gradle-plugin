@@ -30,228 +30,636 @@ import java.io.File
 
 @RunWith(Parameterized::class)
 class PublishAndDependencyTest(
-        private val testName: String,
-        private val projects: Array<Project>
+    private val testName: String,
+    private val projects: Array<Project>
 ) {
 
     data class Project(
-            val projectName: String,
-            val expectSuccess: Boolean = true,
-            val onBuild: (File, File) -> Unit = { _, _ -> }
+        val projectName: String,
+        val expectSuccess: Boolean = true,
+        val onBuild: (File, File) -> Unit = { _, _ -> }
     )
 
     companion object {
         @JvmStatic
         @Parameterized.Parameters(name = "{0}")
         fun example() = arrayOf(
-                test("publishMain",
-                        Project(projectName = "a", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "a", projectDir = projectDir, repository = repository)
-                        })),
-                test("publishMainAndTest",
-                        Project(projectName = "a", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = true, md = false, doc = true, projectName = "a", projectDir = projectDir, repository = repository)
-                        })),
-                test("publishMainAndDocSource",
-                        Project(projectName = "a", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = true, doc = true, projectName = "a", projectDir = projectDir, repository = repository)
-                        })),
-                test("noAutoDocGen",
-                        Project(projectName = "a", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = false, projectName = "a", projectDir = projectDir, repository = repository)
-                        })),
-                test("publishAndConsumeMain",
-                        Project(projectName = "a", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "a", projectDir = projectDir, repository = repository)
-                        }),
-                        Project(projectName = "b", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "b", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                        })),
-                test("publishAndConsumeLib",
-                        Project(projectName = "javalib", onBuild = { _, _ -> }),
-                        Project(projectName = "vdmlib", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = true, md = false, doc = true, projectName = "vdmlib", projectDir = projectDir, repository = repository)
-                            checkLibInstalled(dependencyName = "javalib", projectDir = projectDir)
-                        })),
-                test("publishAndConsumeTransitiveLib",
-                        Project(projectName = "javalib", onBuild = { _, _ -> }),
-                        Project(projectName = "vdmlib", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = true, md = false, doc = true, projectName = "vdmlib", projectDir = projectDir, repository = repository)
-                            checkLibInstalled(dependencyName = "javalib", projectDir = projectDir)
-                        }),
-                        Project(projectName = "consumer", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = true, md = false, doc = true, projectName = "consumer", projectDir = projectDir, repository = repository)
-                            checkLibInstalled(dependencyName = "javalib", projectDir = projectDir)
-                        })),
-                test("publishAndConsumeTransitiveMain",
-                        Project(projectName = "a", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "a", projectDir = projectDir, repository = repository)
-                        }),
-                        Project(projectName = "b", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "b", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                        }),
-                        Project(projectName = "c", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "c", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                            checkDependency(dependencyName = "b", projectDir = projectDir)
-                        })),
-                test("publishAndConsumeTest",
-                        Project(projectName = "a", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = true, md = false, doc = true, projectName = "a", projectDir = projectDir, repository = repository)
-                        }),
-                        Project(projectName = "b", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = true, md = false, doc = true, projectName = "b", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                            checkDependency(dependencyName = "a", dependencyType = "test", projectDir = projectDir)
-                        })),
-                test("publishButDontConsumeTest",
-                        Project(projectName = "a", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = true, md = false, doc = true, projectName = "a", projectDir = projectDir, repository = repository)
-                        }),
-                        Project(projectName = "b", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "b", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                            checkDependency(dependencyName = "a", present = false, dependencyType = "test", projectDir = projectDir)
-                        })),
-                test("publishAndConsumeTransitiveTest",
-                        Project(projectName = "a", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = true, md = false, doc = true, projectName = "a", projectDir = projectDir, repository = repository)
-                        }),
-                        Project(projectName = "b", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = true, md = false, doc = true, projectName = "b", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                            checkDependency(dependencyName = "a", dependencyType = "test", projectDir = projectDir)
-                        }),
-                        Project(projectName = "c", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = true, md = false, doc = true, projectName = "c", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                            checkDependency(dependencyName = "b", projectDir = projectDir)
-                            checkDependency(dependencyName = "a", dependencyType = "test", projectDir = projectDir)
-                            checkDependency(dependencyName = "b", dependencyType = "test", projectDir = projectDir)
-                        })),
-                test("publishAndConsumeMd",
-                        Project(projectName = "a", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = true, doc = true, projectName = "a", projectDir = projectDir, repository = repository)
-                        }),
-                        Project(projectName = "b", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = true, doc = true, projectName = "b", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                            checkDependency(dependencyName = "a", dependencyType = "md", projectDir = projectDir)
-                        })),
-                test("publishButDontConsumeMd",
-                        Project(projectName = "a", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = true, doc = true, projectName = "a", projectDir = projectDir, repository = repository)
-                        }),
-                        Project(projectName = "b", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "b", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                            checkDependency(dependencyName = "a", present = false, dependencyType = "md", projectDir = projectDir)
-                        })),
-                test("publishAndConsumeTransitiveMd",
-                        Project(projectName = "a", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = true, doc = true, projectName = "a", projectDir = projectDir, repository = repository)
-                        }),
-                        Project(projectName = "b", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = true, doc = true, projectName = "b", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                            checkDependency(dependencyName = "a", dependencyType = "md", projectDir = projectDir)
-                        }),
-                        Project(projectName = "c", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = true, doc = true, projectName = "c", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                            checkDependency(dependencyName = "b", projectDir = projectDir)
-                            checkDependency(dependencyName = "a", dependencyType = "md", projectDir = projectDir)
-                            checkDependency(dependencyName = "b", dependencyType = "md", projectDir = projectDir)
-                        })),
-                test("diamondDependencyClash",
-                        Project(projectName = "a1", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "a", projectDir = projectDir, repository = repository)
-                        }),
-                        Project(projectName = "a2", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "a", projectDir = projectDir, repository = repository, version = "2.0.0")
-                        }),
-                        Project(projectName = "b", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "b", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                        }),
-                        Project(projectName = "c", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "c", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                        }),
-                        Project(projectName = "d", expectSuccess = false)),
-                test("diamondDependencyClashWithExclusion",
-                        Project(projectName = "a1", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "a", projectDir = projectDir, repository = repository)
-                        }),
-                        Project(projectName = "a2", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "a", projectDir = projectDir, repository = repository, version = "2.0.0")
-                        }),
-                        Project(projectName = "b", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "b", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                        }),
-                        Project(projectName = "c", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "c", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                        }),
-                        Project(projectName = "d", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "d", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                            checkDependency(dependencyName = "b", projectDir = projectDir)
-                            checkDependency(dependencyName = "c", projectDir = projectDir)
-                        })),
-                test("diamondDependencyOk",
-                        Project(projectName = "a", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "a", projectDir = projectDir, repository = repository)
-                        }),
-                        Project(projectName = "b", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "b", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                        }),
-                        Project(projectName = "c", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "c", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                        }),
-                        Project(projectName = "d", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "d", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "a", projectDir = projectDir)
-                            checkDependency(dependencyName = "b", projectDir = projectDir)
-                            checkDependency(dependencyName = "c", projectDir = projectDir)
-                        })),
-                test("splittingISO8601",
-                        Project(projectName = "numeric", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "numeric", projectDir = projectDir, repository = repository)
-                        }),
-                        Project(projectName = "ord", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "ord", projectDir = projectDir, repository = repository)
-                        }),
-                        Project(projectName = "seq", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "seq", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "ord", projectDir = projectDir)
-                            checkDependency(dependencyName = "numeric", projectDir = projectDir)
-                        }),
-                        Project(projectName = "set", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "set", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "ord", projectDir = projectDir)
-                            checkDependency(dependencyName = "numeric", projectDir = projectDir)
-                            checkDependency(dependencyName = "seq", projectDir = projectDir)
-                        }),
-                        Project(projectName = "char", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "char", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "ord", projectDir = projectDir)
-                            checkDependency(dependencyName = "numeric", projectDir = projectDir)
-                            checkDependency(dependencyName = "seq", projectDir = projectDir)
-                            checkDependency(dependencyName = "set", projectDir = projectDir)
-                        }),
-                        Project(projectName = "iso8601", onBuild = { projectDir, repository ->
-                            checkPackagedAndPublished(main = true, test = false, md = false, doc = true, projectName = "iso8601", projectDir = projectDir, repository = repository)
-                            checkDependency(dependencyName = "ord", projectDir = projectDir)
-                            checkDependency(dependencyName = "numeric", projectDir = projectDir)
-                            checkDependency(dependencyName = "seq", projectDir = projectDir)
-                            checkDependency(dependencyName = "set", projectDir = projectDir)
-                        }))
+            test(
+                "publishMain",
+                Project(projectName = "a", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "a",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                })
+            ),
+            test(
+                "publishMainAndTest",
+                Project(projectName = "a", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = true,
+                        md = false,
+                        doc = true,
+                        projectName = "a",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                })
+            ),
+            test(
+                "publishMainAndDocSource",
+                Project(projectName = "a", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = true,
+                        doc = true,
+                        projectName = "a",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                })
+            ),
+            test(
+                "noAutoDocGen",
+                Project(projectName = "a", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = false,
+                        projectName = "a",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                })
+            ),
+            test(
+                "publishAndConsumeMain",
+                Project(projectName = "a", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "a",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                }),
+                Project(projectName = "b", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "b",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                })
+            ),
+            test(
+                "publishAndConsumeLib",
+                Project(projectName = "javalib", onBuild = { _, _ -> }),
+                Project(projectName = "vdmlib", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = true,
+                        md = false,
+                        doc = true,
+                        projectName = "vdmlib",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkLibInstalled(dependencyName = "javalib", projectDir = projectDir)
+                })
+            ),
+            test(
+                "publishAndConsumeTransitiveLib",
+                Project(projectName = "javalib", onBuild = { _, _ -> }),
+                Project(projectName = "vdmlib", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = true,
+                        md = false,
+                        doc = true,
+                        projectName = "vdmlib",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkLibInstalled(dependencyName = "javalib", projectDir = projectDir)
+                }),
+                Project(projectName = "consumer", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = true,
+                        md = false,
+                        doc = true,
+                        projectName = "consumer",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkLibInstalled(dependencyName = "javalib", projectDir = projectDir)
+                })
+            ),
+            test(
+                "publishAndConsumeTransitiveMain",
+                Project(projectName = "a", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "a",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                }),
+                Project(projectName = "b", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "b",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                }),
+                Project(projectName = "c", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "c",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                    checkDependency(dependencyName = "b", projectDir = projectDir)
+                })
+            ),
+            test(
+                "publishAndConsumeTest",
+                Project(projectName = "a", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = true,
+                        md = false,
+                        doc = true,
+                        projectName = "a",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                }),
+                Project(projectName = "b", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = true,
+                        md = false,
+                        doc = true,
+                        projectName = "b",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                    checkDependency(dependencyName = "a", dependencyType = "test", projectDir = projectDir)
+                })
+            ),
+            test(
+                "publishButDontConsumeTest",
+                Project(projectName = "a", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = true,
+                        md = false,
+                        doc = true,
+                        projectName = "a",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                }),
+                Project(projectName = "b", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "b",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                    checkDependency(
+                        dependencyName = "a",
+                        present = false,
+                        dependencyType = "test",
+                        projectDir = projectDir
+                    )
+                })
+            ),
+            test(
+                "publishAndConsumeTransitiveTest",
+                Project(projectName = "a", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = true,
+                        md = false,
+                        doc = true,
+                        projectName = "a",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                }),
+                Project(projectName = "b", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = true,
+                        md = false,
+                        doc = true,
+                        projectName = "b",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                    checkDependency(dependencyName = "a", dependencyType = "test", projectDir = projectDir)
+                }),
+                Project(projectName = "c", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = true,
+                        md = false,
+                        doc = true,
+                        projectName = "c",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                    checkDependency(dependencyName = "b", projectDir = projectDir)
+                    checkDependency(dependencyName = "a", dependencyType = "test", projectDir = projectDir)
+                    checkDependency(dependencyName = "b", dependencyType = "test", projectDir = projectDir)
+                })
+            ),
+            test(
+                "publishAndConsumeMd",
+                Project(projectName = "a", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = true,
+                        doc = true,
+                        projectName = "a",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                }),
+                Project(projectName = "b", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = true,
+                        doc = true,
+                        projectName = "b",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                    checkDependency(dependencyName = "a", dependencyType = "md", projectDir = projectDir)
+                })
+            ),
+            test(
+                "publishButDontConsumeMd",
+                Project(projectName = "a", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = true,
+                        doc = true,
+                        projectName = "a",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                }),
+                Project(projectName = "b", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "b",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                    checkDependency(
+                        dependencyName = "a",
+                        present = false,
+                        dependencyType = "md",
+                        projectDir = projectDir
+                    )
+                })
+            ),
+            test(
+                "publishAndConsumeTransitiveMd",
+                Project(projectName = "a", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = true,
+                        doc = true,
+                        projectName = "a",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                }),
+                Project(projectName = "b", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = true,
+                        doc = true,
+                        projectName = "b",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                    checkDependency(dependencyName = "a", dependencyType = "md", projectDir = projectDir)
+                }),
+                Project(projectName = "c", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = true,
+                        doc = true,
+                        projectName = "c",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                    checkDependency(dependencyName = "b", projectDir = projectDir)
+                    checkDependency(dependencyName = "a", dependencyType = "md", projectDir = projectDir)
+                    checkDependency(dependencyName = "b", dependencyType = "md", projectDir = projectDir)
+                })
+            ),
+            test(
+                "diamondDependencyClash",
+                Project(projectName = "a1", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "a",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                }),
+                Project(projectName = "a2", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "a",
+                        projectDir = projectDir,
+                        repository = repository,
+                        version = "2.0.0"
+                    )
+                }),
+                Project(projectName = "b", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "b",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                }),
+                Project(projectName = "c", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "c",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                }),
+                Project(projectName = "d", expectSuccess = false)
+            ),
+            test(
+                "diamondDependencyClashWithExclusion",
+                Project(projectName = "a1", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "a",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                }),
+                Project(projectName = "a2", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "a",
+                        projectDir = projectDir,
+                        repository = repository,
+                        version = "2.0.0"
+                    )
+                }),
+                Project(projectName = "b", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "b",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                }),
+                Project(projectName = "c", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "c",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                }),
+                Project(projectName = "d", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "d",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                    checkDependency(dependencyName = "b", projectDir = projectDir)
+                    checkDependency(dependencyName = "c", projectDir = projectDir)
+                })
+            ),
+            test(
+                "diamondDependencyOk",
+                Project(projectName = "a", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "a",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                }),
+                Project(projectName = "b", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "b",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                }),
+                Project(projectName = "c", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "c",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                }),
+                Project(projectName = "d", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "d",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "a", projectDir = projectDir)
+                    checkDependency(dependencyName = "b", projectDir = projectDir)
+                    checkDependency(dependencyName = "c", projectDir = projectDir)
+                })
+            ),
+            test(
+                "splittingISO8601",
+                Project(projectName = "numeric", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "numeric",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                }),
+                Project(projectName = "ord", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "ord",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                }),
+                Project(projectName = "seq", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "seq",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "ord", projectDir = projectDir)
+                    checkDependency(dependencyName = "numeric", projectDir = projectDir)
+                }),
+                Project(projectName = "set", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "set",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "ord", projectDir = projectDir)
+                    checkDependency(dependencyName = "numeric", projectDir = projectDir)
+                    checkDependency(dependencyName = "seq", projectDir = projectDir)
+                }),
+                Project(projectName = "char", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "char",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "ord", projectDir = projectDir)
+                    checkDependency(dependencyName = "numeric", projectDir = projectDir)
+                    checkDependency(dependencyName = "seq", projectDir = projectDir)
+                    checkDependency(dependencyName = "set", projectDir = projectDir)
+                }),
+                Project(projectName = "iso8601", onBuild = { projectDir, repository ->
+                    checkPackagedAndPublished(
+                        main = true,
+                        test = false,
+                        md = false,
+                        doc = true,
+                        projectName = "iso8601",
+                        projectDir = projectDir,
+                        repository = repository
+                    )
+                    checkDependency(dependencyName = "ord", projectDir = projectDir)
+                    checkDependency(dependencyName = "numeric", projectDir = projectDir)
+                    checkDependency(dependencyName = "seq", projectDir = projectDir)
+                    checkDependency(dependencyName = "set", projectDir = projectDir)
+                })
+            )
         )
 
         private fun checkLibInstalled(dependencyName: String, dependencyVersion: String = "1.0.0", projectDir: File) {
@@ -259,7 +667,12 @@ class PublishAndDependencyTest(
             Assert.assertTrue(libFile.exists())
         }
 
-        private fun checkDependency(dependencyName: String, dependencyType: String = "", present: Boolean = true, projectDir: File) {
+        private fun checkDependency(
+            dependencyName: String,
+            dependencyType: String = "",
+            present: Boolean = true,
+            projectDir: File
+        ) {
             val dependencyPrefix = if (dependencyType.isEmpty()) "" else "$dependencyType-"
             val dependencyDir = File(projectDir, "build/vdm/${dependencyPrefix}dependencies/testing/$dependencyName")
             Assert.assertEquals(present, dependencyDir.exists())
@@ -268,18 +681,35 @@ class PublishAndDependencyTest(
             }
         }
 
-        private fun checkPackagedAndPublished(main: Boolean, test: Boolean, md: Boolean, doc: Boolean, projectName: String, projectDir: File, repository: File, version: String = "1.0.0") {
+        private fun checkPackagedAndPublished(
+            main: Boolean,
+            test: Boolean,
+            md: Boolean,
+            doc: Boolean,
+            projectName: String,
+            projectDir: File,
+            repository: File,
+            version: String = "1.0.0"
+        ) {
             checkArtifactPackageAndPublishState(projectName, "", projectDir, repository, main, version)
             checkArtifactPackageAndPublishState(projectName, "test", projectDir, repository, test, version)
             checkArtifactPackageAndPublishState(projectName, "md", projectDir, repository, md, version)
             checkArtifactPackageAndPublishState(projectName, "doc", projectDir, repository, doc, version)
         }
 
-        private fun checkArtifactPackageAndPublishState(projectName: String, classifier: String, projectDir: File, repository: File, packagedAndPublished: Boolean, version: String) {
+        private fun checkArtifactPackageAndPublishState(
+            projectName: String,
+            classifier: String,
+            projectDir: File,
+            repository: File,
+            packagedAndPublished: Boolean,
+            version: String
+        ) {
             val classifierSuffix = if (classifier.isEmpty()) "" else "-$classifier"
             val packageFile = File(projectDir, "build/libs/$projectName-$version$classifierSuffix.zip")
             Assert.assertEquals(packagedAndPublished, packageFile.exists())
-            val publishedFile = File(repository, "testing/$projectName/$version/$projectName-$version$classifierSuffix.zip")
+            val publishedFile =
+                File(repository, "testing/$projectName/$version/$projectName-$version$classifierSuffix.zip")
             Assert.assertEquals(packagedAndPublished, publishedFile.exists())
             if (packagedAndPublished) {
                 Assert.assertEquals(publishedFile.readBytes().toList(), packageFile.readBytes().toList())
@@ -287,8 +717,8 @@ class PublishAndDependencyTest(
         }
 
         private fun test(
-                testName: String,
-                vararg projects: Project
+            testName: String,
+            vararg projects: Project
         ): Array<Any> = arrayOf(testName, projects)
     }
 
@@ -299,9 +729,10 @@ class PublishAndDependencyTest(
         projects.forEach { project ->
             val projectDir = File(parentDir, project.projectName)
             executeBuild(
-                    projectDir = projectDir,
-                    tasks = arrayOf("test", "publish"),
-                    fail = !project.expectSuccess)
+                projectDir = projectDir,
+                tasks = arrayOf("test", "publish"),
+                fail = !project.expectSuccess
+            )
             project.onBuild(projectDir, repository)
         }
     }

@@ -26,11 +26,11 @@ repositories {
 apply plugin: 'vdm'
 
 dependencies {
-  vdm group: 'testing', name: 'a', version: '1.0.0'
+    vdm group: 'testing', name: 'a', version: '1.0.0'
 }
 
 vdm {
-  dependencies {
-      autoDependTest false
-  }
+    dependencies {
+        autoDependTest false
+    }
 }
