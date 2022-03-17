@@ -12,7 +12,7 @@ PROJECT_DIR="$SCRIPT_DIR/.."
 GRADLEW="$PROJECT_DIR/gradlew"
 
 cd "$PROJECT_DIR"
-"$GRADLEW" publish -Pversion="$VERSION"
+"$GRADLEW" publish publishPlugins -Pversion="$VERSION"
 
 TAG="v$VERSION"
 git tag -a $TAG -m "Release $TAG"
