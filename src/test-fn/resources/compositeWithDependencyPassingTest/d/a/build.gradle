@@ -4,7 +4,7 @@ buildscript {
     }
 }
 
-apply plugin: 'vdm'
+apply plugin: 'com.anaplan.engineering.vdm'
 
 group "com.acme"
 version "1.0"

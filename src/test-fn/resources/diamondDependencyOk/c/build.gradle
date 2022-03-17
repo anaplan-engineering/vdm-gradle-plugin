@@ -23,7 +23,7 @@ repositories {
     }
 }
 
-apply plugin: 'vdm'
+apply plugin: 'com.anaplan.engineering.vdm'
 
 dependencies {
     vdm group: 'testing', name: 'a', version: '1.0.0'

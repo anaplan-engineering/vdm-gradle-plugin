@@ -46,7 +46,7 @@ internal fun Project.addDependencyUnpackTask() {
         val vdmConfiguration = project.configurations.getByName(vdmConfigurationName)
         vdmConfiguration.dependencies.filterIsInstance<ProjectDependency>().forEach {
             val plugins = it.dependencyProject.plugins
-            if (plugins.findPlugin("vdm") != null) {
+            if (plugins.findPlugin(pluginId) != null) {
                 val dependencyTask = it.dependencyProject.tasks.getByName(dependencyUnpack)
                     ?: throw GradleException("Cannot find unpack task in project dependency")
                 localTask.dependsOn(dependencyTask)
@@ -163,7 +163,7 @@ open class DependencyUnpackTask : DefaultTask() {
 
 
                             val plugins = dependency.plugins
-                            if (plugins.findPlugin("vdm") != null) {
+                            if (plugins.findPlugin(pluginId) != null) {
                                 val dependencyLink = File(vdmDependencyDir, "${dependency.group}/${dependency.name}")
                                 if (dependencyLink.exists()) {
                                     dependencyLink.delete()

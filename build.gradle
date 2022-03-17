@@ -2,10 +2,12 @@ plugins {
     id "org.jetbrains.kotlin.jvm" version "1.5.31"
     id 'java-gradle-plugin'
     id 'maven-publish'
+    id 'signing'
+    id 'com.gradle.plugin-publish' version '0.20.0'
 }
 
 group = 'com.anaplan.engineering'
-version = '3.0.2'
+version = findProperty("version")
 
 ext {
     overtureVersion = "3.0.2"
@@ -79,21 +81,85 @@ check.dependsOn functionalTest
 gradlePlugin {
     plugins {
         vdm {
-            id = "vdm"
+            id = "${group}.vdm"
+            displayName = 'VDM gradle plugin'
+            description = 'A Gradle plugin to parse, type-check, test and publsih a VDM specification.'
             implementationClass = "com.anaplan.engineering.vdmgradleplugin.VdmGradlePlugin"
         }
     }
 }
 
-// Using artifactory plugin appears broken -- https://github.com/gradle/gradle/issues/4783
+pluginBundle {
+    website = 'https://github.com/anaplan-engineering/vdm-gradle-plugin'
+    vcsUrl = 'https://github.com/anaplan-engineering/vdm-gradle-plugin'
+    tags = ['VDM']
+}
+
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
 publishing {
     repositories {
         maven {
+            url 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
             credentials {
-                username System.env.ART_USERNAME
-                password System.env.ART_PASSWORD
+                username findProperty("ossrhUsername")
+                password findProperty("ossrhPassword")
             }
-            url findProperty('ART_URL')
+        }
+    }
+    afterEvaluate {
+        publications {
+            withType(MavenPublication) {
+                groupId = group
+                pom {
+                    name = 'VDM Gradle plugin'
+                    description = 'A Gradle plugin to parse, type-check, test and publsih a VDM specification.'
+                    url = 'https://github.com/anaplan-engineering/vdm-gradle-plugin'
+
+                    scm {
+                        connection = 'scm:git:git://github.com/anaplan-engineering/vdm-gradle-plugin.git'
+                        developerConnection = 'scm:git:git@github.com:anaplan-engineering/vdm-gradle-plugin.git'
+                        url = 'https://github.com/anaplan-engineering/vdm-gradle-plugin'
+                    }
+
+                    licenses {
+                        license {
+                            name = 'GPL 3.0'
+                            url = 'https://github.com/anaplan-engineering/vdm-gradle-plugin/blob/main/LICENSE'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = 'sifraser'
+                            name = 'Simon Fraser'
+                            email = 'simon.fraser@anaplan.com'
+                            roles = ['architect', 'principal engineer']
+                            url = "https://github.com/sifraser"
+                            organization = "Anaplan Ltd"
+                            organizationUrl = "http://www.anaplan.com"
+                        }
+                        developer {
+                            id = 'donbex'
+                            name = 'Alessandro Pezzoni'
+                            email = 'alessandro.pezzoni@anaplan.com'
+                            url = "https://github.com/donbex"
+                            organization = "Anaplan Ltd"
+                            organizationUrl = "http://www.anaplan.com"
+                            roles = ['associate engineer']
+                        }
+                    }
+                }
+            }
         }
     }
 }
+
+signing {
+    sign publishing.publications.withType(MavenPublication)
+}
+

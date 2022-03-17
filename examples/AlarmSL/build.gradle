@@ -10,4 +10,4 @@ buildscript {
 
 version = '1.0.0'
 
-apply plugin: 'vdm'
+apply plugin: 'com.anaplan.engineering.vdm'

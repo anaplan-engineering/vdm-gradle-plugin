@@ -86,7 +86,7 @@ buildscript {
     }
 }
 
-apply plugin: 'vdm'
+apply plugin: 'com.anaplan.engineering.vdm'
 ```
 
 The plugin will automatically pick up any annotation classes that have been added to the classpath dependencies.
@@ -121,7 +121,7 @@ buildscript {
     }
 }
 
-apply plugin: 'vdm'
+apply plugin: 'com.anaplan.engineering.vdm'
 apply plugin: 'maven-publish'
 
 group = 'com.acme'

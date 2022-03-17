@@ -4,7 +4,7 @@ buildscript {
     }
 }
 
-apply plugin: 'vdm'
+apply plugin: 'com.anaplan.engineering.vdm'
 
 vdm {
     testLaunchGeneration = 'NONE'

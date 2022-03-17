@@ -8,7 +8,7 @@ repositories {
     mavenLocal()
 }
 
-apply plugin: 'vdm'
+apply plugin: 'com.anaplan.engineering.vdm'
 
 dependencies {
     vdm "com.acme:a:1.0"
