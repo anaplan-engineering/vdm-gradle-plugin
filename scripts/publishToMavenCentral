@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# This script will upload the contained artifacts to the Maven Central staging repository
+
+# To run this script you will need to have ossrhUsername and ossrhPassword properties defined in your user gradle.properties with your credentials for Nexus
+
+set -e
+
+VERSION="$1"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+PROJECT_DIR="$SCRIPT_DIR/.."
+GRADLEW="$PROJECT_DIR/gradlew"
+
+cd "$PROJECT_DIR"
+"$GRADLEW" publish -Pversion="$VERSION"
+
+TAG="v$VERSION"
+git tag -a $TAG -m "Release $TAG"
+git push origin "$TAG"

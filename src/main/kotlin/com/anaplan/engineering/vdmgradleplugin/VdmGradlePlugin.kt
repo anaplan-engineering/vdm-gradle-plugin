@@ -56,6 +56,8 @@ internal const val vdmTaskGroup = "vdm"
 internal const val vdmConfigurationName = "vdm"
 internal const val vdmMarkdownConfiguration = "vdm-md"
 internal const val vdmTestConfiguration = "vdm-test"
+internal const val pluginId = "com.anaplan.engineering.vdm"
+
 
 internal val Project.vdmConfig
     get() = extensions.getByType(VdmConfigExtension::class.java)

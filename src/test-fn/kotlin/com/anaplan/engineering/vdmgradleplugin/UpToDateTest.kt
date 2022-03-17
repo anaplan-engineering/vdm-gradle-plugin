@@ -1611,7 +1611,7 @@ class generateLaunchGenForAllTestUpToDateTest {
         |    }
         |}
         |
-        |apply plugin: 'vdm'
+        |apply plugin: 'com.anaplan.engineering.vdm'
     """.trimMargin()
 
     private val useVdmPp = """
