@@ -49,13 +49,13 @@ open class VdmTypeCheckTestTask() : VdmTypeCheckTask(true)
 
 open class VdmTypeCheckTask(private val includeTests: Boolean) : OvertureTask() {
 
-    private val specificationFiles: FileCollection
+    val specificationFiles: FileCollection
         @PathSensitive(PathSensitivity.RELATIVE)
         @InputFiles
         get() = project.locateAllSpecifications(dialect, includeTests)
 
     // Only needed to ensure caching of the Gradle task
-    private val logFile: File
+    val logFile: File
         @OutputFile
         get() = File(project.vdmBuildDir, "typeCheckTask.log")
 
