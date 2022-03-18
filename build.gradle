@@ -83,7 +83,7 @@ gradlePlugin {
         vdm {
             id = "${group}.vdm"
             displayName = 'VDM gradle plugin'
-            description = 'A Gradle plugin to parse, type-check, test and publsih a VDM specification.'
+            description = 'A Gradle plugin to parse, type-check, test and publish a VDM specification.'
             implementationClass = "com.anaplan.engineering.vdmgradleplugin.VdmGradlePlugin"
         }
     }
@@ -117,7 +117,7 @@ publishing {
                 groupId = group
                 pom {
                     name = 'VDM Gradle plugin'
-                    description = 'A Gradle plugin to parse, type-check, test and publsih a VDM specification.'
+                    description = 'A Gradle plugin to parse, type-check, test and publish a VDM specification.'
                     url = 'https://github.com/anaplan-engineering/vdm-gradle-plugin'
 
                     scm {
