@@ -45,17 +45,17 @@ internal fun Project.addDependencyUnpackTask() {
     afterEvaluate {
         val vdmConfiguration = project.configurations.getByName(vdmConfigurationName)
         vdmConfiguration.dependencies.filterIsInstance<ProjectDependency>().forEach {
-            val plugins = it.dependencyProject.plugins
-            if (plugins.findPlugin(pluginId) != null) {
-                val dependencyTask = it.dependencyProject.tasks.getByName(dependencyUnpack)
+            val pluginManager = it.dependencyProject.pluginManager
+            val tasks = it.dependencyProject.tasks
+            pluginManager.withPlugin(pluginId) {
+                val dependencyTask = tasks.getByName(dependencyUnpack)
                     ?: throw GradleException("Cannot find unpack task in project dependency")
                 localTask.dependsOn(dependencyTask)
-            } else if (plugins.findPlugin("java") != null) {
-                val assembleTask = it.dependencyProject.tasks.getByName(LifecycleBasePlugin.ASSEMBLE_TASK_NAME)
+            }
+            pluginManager.withPlugin("java") {
+                val assembleTask = tasks.getByName(LifecycleBasePlugin.ASSEMBLE_TASK_NAME)
                     ?: throw GradleException("Cannot find unpack task in project dependency")
                 localTask.dependsOn(assembleTask)
-            } else {
-                throw GradleException("Don't know what to do with project $it")
             }
         }
     }
