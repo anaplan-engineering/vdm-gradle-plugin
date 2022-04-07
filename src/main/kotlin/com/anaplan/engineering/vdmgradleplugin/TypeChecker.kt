@@ -25,8 +25,9 @@ import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.*
-import java.io.ByteArrayOutputStream
+import java.io.BufferedOutputStream
 import java.io.File
+import java.io.FileOutputStream
 import java.io.OutputStream
 
 const val typeCheck = "typeCheck"
@@ -64,28 +65,28 @@ open class VdmTypeCheckTask(private val includeTests: Boolean) : OvertureTask() 
         if (specificationFiles.isEmpty) {
             logger.info("No files found")
         } else {
-            standardOutput = ByteArrayOutputStream()
+            clearLogFile()
+            standardOutput = LogAndSaveOutputStream(logFile) { log(it) }
             jvmArgs = project.vdmConfig.overtureJvmArgs
             setArgs(constructArgs())
             classpath = project.files(createClassPathJar())
             super.exec()
-            writeOutput(standardOutput)
         }
     }
 
-    private fun writeOutput(os: OutputStream) {
-        val output = os.toString()
-        logFile.writeText(output)
-        output.lineSequence().forEach {
-            logger.log(getLogLevel(it), it)
+    private fun log(line: String) {
+        val level = when {
+            line.startsWith("Error") -> LogLevel.ERROR
+            line.startsWith("Warning") -> LogLevel.WARN
+            line.startsWith("Parsed") || line.startsWith("Type checked") -> LogLevel.INFO
+            else -> LogLevel.LIFECYCLE
         }
+        logger.log(level, line)
     }
 
-    private fun getLogLevel(line: String) = when {
-        line.startsWith("Error") -> LogLevel.ERROR
-        line.startsWith("Warning") -> LogLevel.WARN
-        line.startsWith("Parsed") || line.startsWith("Type checked") -> LogLevel.INFO
-        else -> LogLevel.LIFECYCLE
+    private fun clearLogFile() {
+        logFile.delete()
+        logFile.createNewFile()
     }
 
     private fun constructArgs() =
@@ -98,3 +99,28 @@ open class VdmTypeCheckTask(private val includeTests: Boolean) : OvertureTask() 
 
 }
 
+private class LogAndSaveOutputStream(
+    private val file: File,
+    private val log: (String) -> Unit
+) : OutputStream() {
+    private val capture = BufferedOutputStream(FileOutputStream(file, true))
+    private val buffer = mutableListOf<Byte>()
+
+    override fun write(b: Int) {
+        if (b.toChar() == '\n') {
+            log(String(buffer.toByteArray()))
+            buffer.clear()
+        } else {
+            buffer.add(b.toByte())
+        }
+        capture.write(b)
+    }
+
+    override fun flush() {
+        capture.flush()
+    }
+
+    override fun close() {
+        capture.close()
+    }
+}
