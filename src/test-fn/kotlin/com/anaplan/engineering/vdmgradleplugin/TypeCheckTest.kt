@@ -77,7 +77,7 @@ class TypeCheckTest(
         Assert.assertNotNull("Log not found", logResource)
 
         val logText = File(logResource!!.toURI()).readText()
-        Assert.assertTrue("Log was not saved", logText.isNotEmpty())
+        Assert.assertTrue("Log was not populated", logText.isNotEmpty())
 
         if (expectSuccess) {
             val re = """Type checked (?<num>\d+) module""".toRegex()
