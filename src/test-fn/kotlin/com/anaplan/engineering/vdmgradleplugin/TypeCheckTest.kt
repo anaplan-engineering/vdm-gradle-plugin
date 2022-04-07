@@ -74,12 +74,14 @@ class TypeCheckTest(
         )
 
         val logResource = javaClass.getResource("/$testName/build/vdm/typeCheckTask.log")
-        Assert.assertNotNull("Log was not saved", logResource)
+        Assert.assertNotNull("Log not found", logResource)
+
+        val logText = File(logResource!!.toURI()).readText()
+        Assert.assertTrue("Log was not saved", logText.isNotEmpty())
 
         if (expectSuccess) {
-            val logFile = File(logResource!!.toURI())
             val re = """Type checked (?<num>\d+) module""".toRegex()
-            val typeCheckedModules = re.find(logFile.readText())?.groups?.get("num")?.value?.toInt()
+            val typeCheckedModules = re.find(logText)?.groups?.get("num")?.value?.toInt()
             Assert.assertEquals(expected, typeCheckedModules)
         }
     }
