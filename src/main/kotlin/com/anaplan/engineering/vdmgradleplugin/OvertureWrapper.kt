@@ -10,6 +10,8 @@ import org.overture.interpreter.runtime.ModuleInterpreter
 import org.overture.interpreter.util.ExitStatus
 import java.io.File
 import java.io.PrintStream
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.net.InetAddress
 import java.nio.file.Files
 import java.text.CharacterIterator
@@ -447,7 +449,11 @@ private class TestRunner(private val interpreter: Interpreter, private val logge
                 logger.debug("PASS .. $moduleName`$testName")
                 TestResult(testName, duration, TestResultState.PASS)
             } else {
-                logger.info("ERRR .. $moduleName`$testName")
+                val stringWriter = StringWriter()
+                val printWriter = PrintWriter(stringWriter)
+                printWriter.write("\nERROR .. $moduleName`$testName\n${e.message}\n")
+                e.ctxt.printStackTrace(printWriter, true)
+                logger.error(stringWriter.toString())
                 TestResult(testName, duration, TestResultState.ERROR, e.message)
             }
         }
